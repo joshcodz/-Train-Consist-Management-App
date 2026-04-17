@@ -1,19 +1,22 @@
-import java.util.HashSet;
-import java.util.Set;
+import java.util.LinkedList;
 
 public class TrainConsistManagementApp {
     public static void main(String[] args) {
         System.out.println("=== Train Consist Management App ===");
 
-        Set<String> bogieIds = new HashSet<>();
+        LinkedList<String> trainConsist = new LinkedList<>();
 
-        bogieIds.add("BG101");
-        bogieIds.add("BG102");
-        bogieIds.add("BG101"); // duplicate intentionally added
-        bogieIds.add("BG103");
-        bogieIds.add("BG102"); // duplicate intentionally added
+        trainConsist.add("Engine");
+        trainConsist.add("Sleeper");
+        trainConsist.add("AC");
+        trainConsist.add("Cargo");
+        trainConsist.add("Guard");
 
-        System.out.println("Unique bogie IDs after insertion: " + bogieIds);
-        System.out.println("Total unique bogie count: " + bogieIds.size());
+        trainConsist.add(2, "Pantry Car");
+
+        trainConsist.removeFirst();
+        trainConsist.removeLast();
+
+        System.out.println("Final ordered train consist: " + trainConsist);
     }
 }
