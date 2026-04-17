@@ -4,10 +4,10 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
- * Test Cases for UC9: Group Bogies by Type (Collectors.groupingBy)
+ * Test Cases for UC10: Count Total Seats Using reduce()
  * 
- * This test class verifies that the Stream API grouping operations work correctly
- * for various scenarios including boundary conditions and different grouping strategies.
+ * This test class verifies that the Stream API reduction operations work correctly
+ * for aggregating bogie capacities and computing meaningful metrics.
  */
 public class TrainConsistManagementAppTest {
     
@@ -26,165 +26,140 @@ public class TrainConsistManagementAppTest {
     }
 
     /**
-     * Test: Bogies grouped by Type
-     * Expected: Two groups (Passenger and Goods) with correct counts
+     * Test: Total seat calculation for all bogies
+     * Expected: Sum of all capacities (72+96+48+120+60+500+400 = 1296)
      */
-    public void testGrouping_BogiesGroupedByType() {
+    public void testReduce_TotalSeatCalculation() {
         setUp();
         
-        Map<String, List<Bogie>> grouped = testBogies.stream()
-                .collect(Collectors.groupingBy(Bogie::getType));
+        int totalCapacity = testBogies.stream()
+                .map(Bogie::getCapacity)
+                .reduce(0, Integer::sum);
         
-        System.out.println("TEST: testGrouping_BogiesGroupedByType");
-        System.out.println("Expected: 2 groups (Passenger: 5, Goods: 2)");
-        System.out.println("Actual: " + grouped.size() + " groups");
+        System.out.println("TEST: testReduce_TotalSeatCalculation");
+        System.out.println("Expected: 1296 seats (72+96+48+120+60+500+400)");
+        System.out.println("Actual: " + totalCapacity + " seats");
         
-        assert grouped.size() == 2 : "Expected 2 groups, got " + grouped.size();
-        assert grouped.containsKey("Passenger") : "Missing 'Passenger' group";
-        assert grouped.containsKey("Goods") : "Missing 'Goods' group";
-        assert grouped.get("Passenger").size() == 5 : "Expected 5 passenger bogies";
-        assert grouped.get("Goods").size() == 2 : "Expected 2 goods bogies";
-        
+        assert totalCapacity == 1296 : "Expected 1296, got " + totalCapacity;
         System.out.println("✓ PASSED\n");
     }
 
     /**
-     * Test: Multiple bogies in same group
-     * Expected: Multiple bogies should be in the same group list
+     * Test: Aggregation of multiple bogies
+     * Expected: All bogie capacities correctly included in total
      */
-    public void testGrouping_MultipleBogiesInSameGroup() {
+    public void testReduce_MultipleBogiesAggregation() {
         setUp();
         
-        Map<String, List<Bogie>> grouped = testBogies.stream()
-                .collect(Collectors.groupingBy(Bogie::getType));
+        int totalCapacity = testBogies.stream()
+                .map(Bogie::getCapacity)
+                .reduce(0, Integer::sum);
         
-        System.out.println("TEST: testGrouping_MultipleBogiesInSameGroup");
-        System.out.println("Expected: Passenger group has multiple bogies");
+        System.out.println("TEST: testReduce_MultipleBogiesAggregation");
+        System.out.println("Expected: " + (72+96+48+120+60+500+400) + " seats");
+        System.out.println("Actual: " + totalCapacity + " seats");
+        System.out.println("Number of bogies: " + testBogies.size());
         
-        List<Bogie> passengerBogies = grouped.get("Passenger");
-        assert passengerBogies.size() > 1 : "Expected multiple bogies in Passenger group";
-        
-        for (Bogie bogie : passengerBogies) {
-            assert "Passenger".equals(bogie.getType()) : "Bogie in wrong group";
-        }
-        
-        System.out.println("Actual: Passenger group has " + passengerBogies.size() + " bogies");
+        assert totalCapacity > 0 : "Total capacity should be positive";
+        assert testBogies.size() == 7 : "Should have 7 bogies";
         System.out.println("✓ PASSED\n");
     }
 
     /**
-     * Test: Different bogie types in different groups
-     * Expected: Each group should contain only one type
+     * Test: Single bogie handling
+     * Expected: Total equals the single bogie's capacity
      */
-    public void testGrouping_DifferentBogieTypes() {
-        setUp();
-        
-        Map<String, List<Bogie>> grouped = testBogies.stream()
-                .collect(Collectors.groupingBy(Bogie::getType));
-        
-        System.out.println("TEST: testGrouping_DifferentBogieTypes");
-        
-        for (String type : grouped.keySet()) {
-            List<Bogie> boggiesOfType = grouped.get(type);
-            for (Bogie bogie : boggiesOfType) {
-                assert type.equals(bogie.getType()) : "Bogie " + bogie.getName() + " in wrong type group";
-            }
-            System.out.println("Type: " + type + " contains " + boggiesOfType.size() + " bogies");
-        }
-        
-        System.out.println("✓ PASSED\n");
-    }
-
-    /**
-     * Test: Empty bogie list grouping
-     * Expected: Empty map should be returned
-     */
-    public void testGrouping_EmptyBogieList() {
-        testBogies = new ArrayList<>();  // Empty list
-        
-        Map<String, List<Bogie>> grouped = testBogies.stream()
-                .collect(Collectors.groupingBy(Bogie::getType));
-        
-        System.out.println("TEST: testGrouping_EmptyBogieList");
-        System.out.println("Expected: 0 groups (empty map)");
-        System.out.println("Actual: " + grouped.size() + " groups");
-        
-        assert grouped.isEmpty() : "Expected empty map, got " + grouped.size() + " groups";
-        System.out.println("✓ PASSED\n");
-    }
-
-    /**
-     * Test: Single bogie category
-     * Expected: Map with one key containing all bogies
-     */
-    public void testGrouping_SingleBogieCategory() {
+    public void testReduce_SingleBogieCapacity() {
         testBogies = new ArrayList<>();
         testBogies.add(new Bogie("Sleeper", "Passenger", 72));
-        testBogies.add(new Bogie("AC Chair", "Passenger", 96));
         
-        Map<String, List<Bogie>> grouped = testBogies.stream()
-                .collect(Collectors.groupingBy(Bogie::getType));
+        int totalCapacity = testBogies.stream()
+                .map(Bogie::getCapacity)
+                .reduce(0, Integer::sum);
         
-        System.out.println("TEST: testGrouping_SingleBogieCategory");
-        System.out.println("Expected: 1 group (all Passenger)");
-        System.out.println("Actual: " + grouped.size() + " groups");
+        System.out.println("TEST: testReduce_SingleBogieCapacity");
+        System.out.println("Expected: 72 seats (single bogie)");
+        System.out.println("Actual: " + totalCapacity + " seats");
         
-        assert grouped.size() == 1 : "Expected 1 group, got " + grouped.size();
-        assert grouped.containsKey("Passenger") : "Expected 'Passenger' group";
-        assert grouped.get("Passenger").size() == 2 : "Expected 2 bogies in group";
-        
+        assert totalCapacity == 72 : "Expected 72, got " + totalCapacity;
         System.out.println("✓ PASSED\n");
     }
 
     /**
-     * Test: Map contains correct keys
-     * Expected: All group keys should match the expected types
+     * Test: Empty bogie list handling
+     * Expected: Result should be 0 (identity value)
      */
-    public void testGrouping_MapContainsCorrectKeys() {
+    public void testReduce_EmptyBogieList() {
+        testBogies = new ArrayList<>();  // Empty list
+        
+        int totalCapacity = testBogies.stream()
+                .map(Bogie::getCapacity)
+                .reduce(0, Integer::sum);
+        
+        System.out.println("TEST: testReduce_EmptyBogieList");
+        System.out.println("Expected: 0 seats (empty list)");
+        System.out.println("Actual: " + totalCapacity + " seats");
+        
+        assert totalCapacity == 0 : "Expected 0 for empty list, got " + totalCapacity;
+        System.out.println("✓ PASSED\n");
+    }
+
+    /**
+     * Test: Correct capacity extraction using map()
+     * Expected: All capacities correctly extracted from Bogie objects
+     */
+    public void testReduce_CorrectCapacityExtraction() {
         setUp();
         
-        Map<String, List<Bogie>> grouped = testBogies.stream()
-                .collect(Collectors.groupingBy(Bogie::getType));
+        int totalCapacity = testBogies.stream()
+                .map(Bogie::getCapacity)
+                .reduce(0, Integer::sum);
         
-        System.out.println("TEST: testGrouping_MapContainsCorrectKeys");
-        System.out.println("Expected keys: 'Passenger', 'Goods'");
-        System.out.println("Actual keys: " + grouped.keySet());
+        // Calculate expected manually
+        int expectedTotal = 0;
+        for (Bogie bogie : testBogies) {
+            expectedTotal += bogie.getCapacity();
+        }
         
-        assert grouped.keySet().contains("Passenger") : "Missing 'Passenger' key";
-        assert grouped.keySet().contains("Goods") : "Missing 'Goods' key";
+        System.out.println("TEST: testReduce_CorrectCapacityExtraction");
+        System.out.println("Expected: " + expectedTotal + " seats");
+        System.out.println("Actual: " + totalCapacity + " seats");
         
+        assert totalCapacity == expectedTotal : "Capacity extraction mismatch";
         System.out.println("✓ PASSED\n");
     }
 
     /**
-     * Test: Group size validation
-     * Expected: Each group should have the correct number of bogies
+     * Test: All bogies included in aggregation
+     * Expected: Total reflects all bogies in collection
      */
-    public void testGrouping_GroupSizeValidation() {
+    public void testReduce_AllBogiesIncluded() {
         setUp();
+        int bogieCount = testBogies.size();
         
-        Map<String, List<Bogie>> grouped = testBogies.stream()
-                .collect(Collectors.groupingBy(Bogie::getType));
+        int totalCapacity = testBogies.stream()
+                .map(Bogie::getCapacity)
+                .reduce(0, Integer::sum);
         
-        System.out.println("TEST: testGrouping_GroupSizeValidation");
-        System.out.println("Expected: Passenger=5 bogies, Goods=2 bogies");
+        System.out.println("TEST: testReduce_AllBogiesIncluded");
+        System.out.println("Bogie count: " + bogieCount);
+        System.out.println("Total capacity: " + totalCapacity + " seats");
         
-        int passengerCount = grouped.get("Passenger").size();
-        int goodsCount = grouped.get("Goods").size();
+        // Verify each bogie contributes
+        int verificationTotal = 0;
+        for (Bogie bogie : testBogies) {
+            verificationTotal += bogie.getCapacity();
+        }
         
-        System.out.println("Actual: Passenger=" + passengerCount + " bogies, Goods=" + goodsCount + " bogies");
-        
-        assert passengerCount == 5 : "Expected 5 passenger bogies, got " + passengerCount;
-        assert goodsCount == 2 : "Expected 2 goods bogies, got " + goodsCount;
-        
-        System.out.println("✓ PASSED\n");
+        assert totalCapacity == verificationTotal : "Not all bogies included";
+        System.out.println("✓ PASSED: All " + bogieCount + " bogies included\n");
     }
 
     /**
-     * Test: Original list remains unchanged after grouping
-     * Expected: Original collection should have same size and contents
+     * Test: Original list unchanged after reduction
+     * Expected: Original collection size and contents remain same
      */
-    public void testGrouping_OriginalListUnchanged() {
+    public void testReduce_OriginalListUnchanged() {
         setUp();
         int originalSize = testBogies.size();
         List<String> originalNames = new ArrayList<>();
@@ -192,11 +167,12 @@ public class TrainConsistManagementAppTest {
             originalNames.add(bogie.getName());
         }
         
-        // Perform grouping operation
-        Map<String, List<Bogie>> grouped = testBogies.stream()
-                .collect(Collectors.groupingBy(Bogie::getType));
+        // Perform reduction
+        int totalCapacity = testBogies.stream()
+                .map(Bogie::getCapacity)
+                .reduce(0, Integer::sum);
         
-        System.out.println("TEST: testGrouping_OriginalListUnchanged");
+        System.out.println("TEST: testReduce_OriginalListUnchanged");
         System.out.println("Original list size before: " + originalSize);
         System.out.println("Original list size after: " + testBogies.size());
         
@@ -207,61 +183,65 @@ public class TrainConsistManagementAppTest {
             currentNames.add(bogie.getName());
         }
         assert currentNames.equals(originalNames) : "Original list contents were modified";
-        
         System.out.println("✓ PASSED: Original list integrity maintained\n");
     }
 
     /**
-     * Test: Grouping by name field
-     * Expected: Each bogie name should be a different key
+     * Test: Passenger bogie aggregation
+     * Expected: Sum of only passenger bogie capacities
      */
-    public void testGrouping_GroupingByName() {
+    public void testReduce_PassengerBogiesOnly() {
         setUp();
         
-        Map<String, List<Bogie>> groupedByName = testBogies.stream()
-                .collect(Collectors.groupingBy(Bogie::getName));
+        int passengerTotal = testBogies.stream()
+                .filter(bogie -> "Passenger".equals(bogie.getType()))
+                .map(Bogie::getCapacity)
+                .reduce(0, Integer::sum);
         
-        System.out.println("TEST: testGrouping_GroupingByName");
-        System.out.println("Expected: 7 groups (one per unique bogie name)");
-        System.out.println("Actual: " + groupedByName.size() + " groups");
+        System.out.println("TEST: testReduce_PassengerBogiesOnly");
+        System.out.println("Expected: 396 seats (72+96+48+120+60)");
+        System.out.println("Actual: " + passengerTotal + " seats");
         
-        assert groupedByName.size() == 7 : "Expected 7 groups, got " + groupedByName.size();
-        
-        for (String name : groupedByName.keySet()) {
-            assert groupedByName.get(name).size() == 1 : "Each name group should have 1 bogie";
-            System.out.println("  Group '" + name + "': " + groupedByName.get(name).size() + " bogie");
-        }
-        
+        assert passengerTotal == 396 : "Expected 396, got " + passengerTotal;
         System.out.println("✓ PASSED\n");
     }
 
     /**
-     * Test: Grouping by capacity range
-     * Expected: Bogies should be grouped into capacity ranges
+     * Test: Goods bogie aggregation
+     * Expected: Sum of only goods bogie capacities
      */
-    public void testGrouping_GroupingByCapacityRange() {
+    public void testReduce_GoodsBogiesOnly() {
         setUp();
         
-        Map<String, List<Bogie>> groupedByRange = testBogies.stream()
-                .collect(Collectors.groupingBy(bogie -> {
-                    if (bogie.getCapacity() < 100) {
-                        return "Low";
-                    } else if (bogie.getCapacity() <= 200) {
-                        return "Medium";
-                    } else {
-                        return "High";
-                    }
-                }));
+        int goodsTotal = testBogies.stream()
+                .filter(bogie -> "Goods".equals(bogie.getType()))
+                .map(Bogie::getCapacity)
+                .reduce(0, Integer::sum);
         
-        System.out.println("TEST: testGrouping_GroupingByCapacityRange");
-        System.out.println("Expected: 3 ranges (Low, Medium, High)");
-        System.out.println("Actual: " + groupedByRange.size() + " ranges");
+        System.out.println("TEST: testReduce_GoodsBogiesOnly");
+        System.out.println("Expected: 900 units (500+400)");
+        System.out.println("Actual: " + goodsTotal + " units");
         
-        assert groupedByRange.size() == 3 : "Expected 3 capacity ranges";
-        assert groupedByRange.get("Low").size() == 4 : "Expected 4 low-capacity bogies";
-        assert groupedByRange.get("Medium").size() == 1 : "Expected 1 medium-capacity bogie";
-        assert groupedByRange.get("High").size() == 2 : "Expected 2 high-capacity bogies";
+        assert goodsTotal == 900 : "Expected 900, got " + goodsTotal;
+        System.out.println("✓ PASSED\n");
+    }
+
+    /**
+     * Test: Maximum capacity using reduce
+     * Expected: Largest bogie capacity value
+     */
+    public void testReduce_MaximumCapacity() {
+        setUp();
         
+        int maxCapacity = testBogies.stream()
+                .map(Bogie::getCapacity)
+                .reduce(0, Integer::max);
+        
+        System.out.println("TEST: testReduce_MaximumCapacity");
+        System.out.println("Expected: 500 (Rectangular bogie)");
+        System.out.println("Actual: " + maxCapacity + " seats");
+        
+        assert maxCapacity == 500 : "Expected 500, got " + maxCapacity;
         System.out.println("✓ PASSED\n");
     }
 
@@ -270,22 +250,22 @@ public class TrainConsistManagementAppTest {
      */
     public static void main(String[] args) {
         System.out.println("========================================");
-        System.out.println("UC9: Stream Grouping Test Suite");
+        System.out.println("UC10: Stream Reduction Test Suite");
         System.out.println("========================================\n");
         
         TrainConsistManagementAppTest tester = new TrainConsistManagementAppTest();
         
         try {
-            tester.testGrouping_BogiesGroupedByType();
-            tester.testGrouping_MultipleBogiesInSameGroup();
-            tester.testGrouping_DifferentBogieTypes();
-            tester.testGrouping_EmptyBogieList();
-            tester.testGrouping_SingleBogieCategory();
-            tester.testGrouping_MapContainsCorrectKeys();
-            tester.testGrouping_GroupSizeValidation();
-            tester.testGrouping_OriginalListUnchanged();
-            tester.testGrouping_GroupingByName();
-            tester.testGrouping_GroupingByCapacityRange();
+            tester.testReduce_TotalSeatCalculation();
+            tester.testReduce_MultipleBogiesAggregation();
+            tester.testReduce_SingleBogieCapacity();
+            tester.testReduce_EmptyBogieList();
+            tester.testReduce_CorrectCapacityExtraction();
+            tester.testReduce_AllBogiesIncluded();
+            tester.testReduce_OriginalListUnchanged();
+            tester.testReduce_PassengerBogiesOnly();
+            tester.testReduce_GoodsBogiesOnly();
+            tester.testReduce_MaximumCapacity();
             
             System.out.println("========================================");
             System.out.println("✓ ALL 10 TESTS PASSED!");

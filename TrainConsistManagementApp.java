@@ -1,7 +1,5 @@
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
 
 class Bogie {
     private String name;
@@ -34,7 +32,7 @@ class Bogie {
 
 public class TrainConsistManagementApp {
     public static void main(String[] args) {
-        System.out.println("=== Train Consist Management App - UC9: Group Bogies by Type ===\n");
+        System.out.println("=== Train Consist Management App - UC10: Count Total Seats Using reduce() ===\n");
 
         // Create a List to store bogie objects
         List<Bogie> bogies = new ArrayList<>();
@@ -54,68 +52,68 @@ public class TrainConsistManagementApp {
             System.out.println("  " + bogie);
         }
 
-        // UC9: Group using Stream API and Collectors.groupingBy()
-        System.out.println("\n=== UC9: Stream Grouping by Bogie Type ===\n");
+        // UC10: Aggregate using Stream reduce()
+        System.out.println("\n=== UC10: Stream Aggregation Using reduce() ===\n");
 
-        // Group 1: Group bogies by type (Passenger vs Goods)
-        System.out.println("Grouping 1: Bogies grouped by Type:");
-        System.out.println("-----------------------------------");
-        Map<String, List<Bogie>> bogiesByType = bogies.stream()
-                .collect(Collectors.groupingBy(Bogie::getType));
+        // Calculate 1: Total seating capacity of all bogies
+        System.out.println("Aggregation 1: Total Seating Capacity of All Bogies");
+        System.out.println("-------------------------------------------------");
+        int totalCapacity = bogies.stream()
+                .map(Bogie::getCapacity)
+                .reduce(0, Integer::sum);
+        System.out.println("Total seating capacity: " + totalCapacity + " seats\n");
 
-        for (String type : bogiesByType.keySet()) {
-            System.out.println("\n  Type: " + type);
-            List<Bogie> boggiesOfType = bogiesByType.get(type);
-            for (Bogie bogie : boggiesOfType) {
-                System.out.println("    - " + bogie);
-            }
-            System.out.println("  Total: " + boggiesOfType.size() + " bogies");
-        }
-
-        // Group 2: Group passenger bogies by name (further classification)
-        System.out.println("\nGrouping 2: Passenger bogies grouped by Name:");
-        System.out.println("---------------------------------------------");
-        Map<String, List<Bogie>> passengerBogiesByName = bogies.stream()
+        // Calculate 2: Total capacity of passenger bogies only
+        System.out.println("Aggregation 2: Total Capacity of Passenger Bogies Only");
+        System.out.println("----------------------------------------------------");
+        int passengerCapacity = bogies.stream()
                 .filter(bogie -> "Passenger".equals(bogie.getType()))
-                .collect(Collectors.groupingBy(Bogie::getName));
+                .map(Bogie::getCapacity)
+                .reduce(0, Integer::sum);
+        System.out.println("Total passenger seating: " + passengerCapacity + " seats\n");
 
-        for (String name : passengerBogiesByName.keySet()) {
-            System.out.println("\n  Name: " + name);
-            List<Bogie> boggiesWithName = passengerBogiesByName.get(name);
-            for (Bogie bogie : boggiesWithName) {
-                System.out.println("    - " + bogie);
-            }
-            System.out.println("  Total: " + boggiesWithName.size() + " bogies");
-        }
-
-        // Group 3: Group bogies by capacity range
-        System.out.println("\nGrouping 3: Bogies grouped by Capacity Range:");
+        // Calculate 3: Total capacity of goods bogies
+        System.out.println("Aggregation 3: Total Capacity of Goods Bogies");
         System.out.println("---------------------------------------------");
-        Map<String, List<Bogie>> bogiesByCapacityRange = bogies.stream()
-                .collect(Collectors.groupingBy(bogie -> {
-                    if (bogie.getCapacity() < 100) {
-                        return "Low Capacity (< 100)";
-                    } else if (bogie.getCapacity() <= 200) {
-                        return "Medium Capacity (100-200)";
-                    } else {
-                        return "High Capacity (> 200)";
-                    }
-                }));
+        int goodsCapacity = bogies.stream()
+                .filter(bogie -> "Goods".equals(bogie.getType()))
+                .map(Bogie::getCapacity)
+                .reduce(0, Integer::sum);
+        System.out.println("Total goods loading capacity: " + goodsCapacity + " units\n");
 
-        for (String capacityRange : bogiesByCapacityRange.keySet()) {
-            System.out.println("\n  Range: " + capacityRange);
-            List<Bogie> boggiesInRange = bogiesByCapacityRange.get(capacityRange);
-            for (Bogie bogie : boggiesInRange) {
-                System.out.println("    - " + bogie);
-            }
-            System.out.println("  Total: " + boggiesInRange.size() + " bogies");
-        }
+        // Calculate 4: Average capacity per bogie
+        System.out.println("Aggregation 4: Average Capacity Per Bogie");
+        System.out.println("-----------------------------------------");
+        double averageCapacity = bogies.stream()
+                .map(Bogie::getCapacity)
+                .reduce(0, Integer::sum) / (double) bogies.size();
+        System.out.println("Average capacity per bogie: " + String.format("%.2f", averageCapacity) + " seats\n");
+
+        // Calculate 5: Maximum and minimum capacity
+        System.out.println("Aggregation 5: Capacity Statistics");
+        System.out.println("----------------------------------");
+        int maxCapacity = bogies.stream()
+                .map(Bogie::getCapacity)
+                .reduce(0, Integer::max);
+        int minCapacity = bogies.stream()
+                .map(Bogie::getCapacity)
+                .reduce(Integer.MAX_VALUE, Integer::min);
+        System.out.println("Maximum capacity bogie: " + maxCapacity + " seats");
+        System.out.println("Minimum capacity bogie: " + minCapacity + " seats\n");
+
+        // Display summary
+        System.out.println("=== Train Capacity Summary ===");
+        System.out.println("Total bogies: " + bogies.size());
+        System.out.println("Total capacity: " + totalCapacity + " seats");
+        System.out.println("Passenger capacity: " + passengerCapacity + " seats");
+        System.out.println("Goods capacity: " + goodsCapacity + " units");
+        System.out.println("Average capacity: " + String.format("%.2f", averageCapacity) + " seats/bogie");
 
         // Verify original list integrity
         System.out.println("\n=== Verify Original Collection Integrity ===");
         System.out.println("Original collection size: " + bogies.size());
         System.out.println("Original bogies unchanged: " + (bogies.size() == 7));
 
-        System.out.println("\n=== Stream Grouping Complete ===");
+        System.out.println("\n=== Stream Reduction Complete ===");
     }
 }
