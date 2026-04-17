@@ -1,247 +1,225 @@
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
- * Test Cases for UC10: Count Total Seats Using reduce()
+ * Test Cases for UC11: Validate Train ID & Cargo Codes (Regex)
  * 
- * This test class verifies that the Stream API reduction operations work correctly
- * for aggregating bogie capacities and computing meaningful metrics.
+ * This test class verifies that Regular Expression validation works correctly
+ * for Train IDs and Cargo Codes following the defined format patterns.
  */
 public class TrainConsistManagementAppTest {
     
-    private List<Bogie> testBogies;
-
-    // Setup method - initializes test data
-    public void setUp() {
-        testBogies = new ArrayList<>();
-        testBogies.add(new Bogie("Sleeper", "Passenger", 72));
-        testBogies.add(new Bogie("AC Chair", "Passenger", 96));
-        testBogies.add(new Bogie("First Class", "Passenger", 48));
-        testBogies.add(new Bogie("General", "Passenger", 120));
-        testBogies.add(new Bogie("AC Sleeper", "Passenger", 60));
-        testBogies.add(new Bogie("Rectangular", "Goods", 500));
-        testBogies.add(new Bogie("Cylindrical", "Goods", 400));
-    }
+    // Define regex patterns
+    private static final String TRAIN_ID_PATTERN = "TRN-\\d{4}";
+    private static final String CARGO_CODE_PATTERN = "PET-[A-Z]{2}";
+    
+    // Compiled patterns
+    private static final Pattern trainIdPattern = Pattern.compile(TRAIN_ID_PATTERN);
+    private static final Pattern cargoCodePattern = Pattern.compile(CARGO_CODE_PATTERN);
 
     /**
-     * Test: Total seat calculation for all bogies
-     * Expected: Sum of all capacities (72+96+48+120+60+500+400 = 1296)
+     * Validate Train ID
      */
-    public void testReduce_TotalSeatCalculation() {
-        setUp();
-        
-        int totalCapacity = testBogies.stream()
-                .map(Bogie::getCapacity)
-                .reduce(0, Integer::sum);
-        
-        System.out.println("TEST: testReduce_TotalSeatCalculation");
-        System.out.println("Expected: 1296 seats (72+96+48+120+60+500+400)");
-        System.out.println("Actual: " + totalCapacity + " seats");
-        
-        assert totalCapacity == 1296 : "Expected 1296, got " + totalCapacity;
-        System.out.println("✓ PASSED\n");
-    }
-
-    /**
-     * Test: Aggregation of multiple bogies
-     * Expected: All bogie capacities correctly included in total
-     */
-    public void testReduce_MultipleBogiesAggregation() {
-        setUp();
-        
-        int totalCapacity = testBogies.stream()
-                .map(Bogie::getCapacity)
-                .reduce(0, Integer::sum);
-        
-        System.out.println("TEST: testReduce_MultipleBogiesAggregation");
-        System.out.println("Expected: " + (72+96+48+120+60+500+400) + " seats");
-        System.out.println("Actual: " + totalCapacity + " seats");
-        System.out.println("Number of bogies: " + testBogies.size());
-        
-        assert totalCapacity > 0 : "Total capacity should be positive";
-        assert testBogies.size() == 7 : "Should have 7 bogies";
-        System.out.println("✓ PASSED\n");
-    }
-
-    /**
-     * Test: Single bogie handling
-     * Expected: Total equals the single bogie's capacity
-     */
-    public void testReduce_SingleBogieCapacity() {
-        testBogies = new ArrayList<>();
-        testBogies.add(new Bogie("Sleeper", "Passenger", 72));
-        
-        int totalCapacity = testBogies.stream()
-                .map(Bogie::getCapacity)
-                .reduce(0, Integer::sum);
-        
-        System.out.println("TEST: testReduce_SingleBogieCapacity");
-        System.out.println("Expected: 72 seats (single bogie)");
-        System.out.println("Actual: " + totalCapacity + " seats");
-        
-        assert totalCapacity == 72 : "Expected 72, got " + totalCapacity;
-        System.out.println("✓ PASSED\n");
-    }
-
-    /**
-     * Test: Empty bogie list handling
-     * Expected: Result should be 0 (identity value)
-     */
-    public void testReduce_EmptyBogieList() {
-        testBogies = new ArrayList<>();  // Empty list
-        
-        int totalCapacity = testBogies.stream()
-                .map(Bogie::getCapacity)
-                .reduce(0, Integer::sum);
-        
-        System.out.println("TEST: testReduce_EmptyBogieList");
-        System.out.println("Expected: 0 seats (empty list)");
-        System.out.println("Actual: " + totalCapacity + " seats");
-        
-        assert totalCapacity == 0 : "Expected 0 for empty list, got " + totalCapacity;
-        System.out.println("✓ PASSED\n");
-    }
-
-    /**
-     * Test: Correct capacity extraction using map()
-     * Expected: All capacities correctly extracted from Bogie objects
-     */
-    public void testReduce_CorrectCapacityExtraction() {
-        setUp();
-        
-        int totalCapacity = testBogies.stream()
-                .map(Bogie::getCapacity)
-                .reduce(0, Integer::sum);
-        
-        // Calculate expected manually
-        int expectedTotal = 0;
-        for (Bogie bogie : testBogies) {
-            expectedTotal += bogie.getCapacity();
+    public static boolean validateTrainID(String trainId) {
+        if (trainId == null || trainId.isEmpty()) {
+            return false;
         }
+        Matcher matcher = trainIdPattern.matcher(trainId);
+        return matcher.matches();
+    }
+
+    /**
+     * Validate Cargo Code
+     */
+    public static boolean validateCargoCode(String cargoCode) {
+        if (cargoCode == null || cargoCode.isEmpty()) {
+            return false;
+        }
+        Matcher matcher = cargoCodePattern.matcher(cargoCode);
+        return matcher.matches();
+    }
+
+    /**
+     * Test: Valid Train ID (TRN-1234)
+     * Expected: Return true for properly formatted Train ID
+     */
+    public void testRegex_ValidTrainID() {
+        System.out.println("TEST: testRegex_ValidTrainID");
+        String trainId = "TRN-1234";
+        boolean result = validateTrainID(trainId);
         
-        System.out.println("TEST: testReduce_CorrectCapacityExtraction");
-        System.out.println("Expected: " + expectedTotal + " seats");
-        System.out.println("Actual: " + totalCapacity + " seats");
+        System.out.println("Input: " + trainId);
+        System.out.println("Expected: true");
+        System.out.println("Actual: " + result);
         
-        assert totalCapacity == expectedTotal : "Capacity extraction mismatch";
+        assert result : "Valid Train ID should be accepted";
         System.out.println("✓ PASSED\n");
     }
 
     /**
-     * Test: All bogies included in aggregation
-     * Expected: Total reflects all bogies in collection
+     * Test: Invalid Train ID Formats
+     * Expected: Return false for incorrectly formatted Train IDs
      */
-    public void testReduce_AllBogiesIncluded() {
-        setUp();
-        int bogieCount = testBogies.size();
+    public void testRegex_InvalidTrainIDFormat() {
+        System.out.println("TEST: testRegex_InvalidTrainIDFormat");
+        String[] invalidIds = {"TRAIN12", "TRN12A", "1234-TRN", "trn-1234", "TRN_1234"};
         
-        int totalCapacity = testBogies.stream()
-                .map(Bogie::getCapacity)
-                .reduce(0, Integer::sum);
-        
-        System.out.println("TEST: testReduce_AllBogiesIncluded");
-        System.out.println("Bogie count: " + bogieCount);
-        System.out.println("Total capacity: " + totalCapacity + " seats");
-        
-        // Verify each bogie contributes
-        int verificationTotal = 0;
-        for (Bogie bogie : testBogies) {
-            verificationTotal += bogie.getCapacity();
+        for (String trainId : invalidIds) {
+            boolean result = validateTrainID(trainId);
+            System.out.println("Input: " + trainId + " -> " + (result ? "VALID" : "INVALID"));
+            assert !result : "Invalid Train ID " + trainId + " should be rejected";
         }
-        
-        assert totalCapacity == verificationTotal : "Not all bogies included";
-        System.out.println("✓ PASSED: All " + bogieCount + " bogies included\n");
-    }
-
-    /**
-     * Test: Original list unchanged after reduction
-     * Expected: Original collection size and contents remain same
-     */
-    public void testReduce_OriginalListUnchanged() {
-        setUp();
-        int originalSize = testBogies.size();
-        List<String> originalNames = new ArrayList<>();
-        for (Bogie bogie : testBogies) {
-            originalNames.add(bogie.getName());
-        }
-        
-        // Perform reduction
-        int totalCapacity = testBogies.stream()
-                .map(Bogie::getCapacity)
-                .reduce(0, Integer::sum);
-        
-        System.out.println("TEST: testReduce_OriginalListUnchanged");
-        System.out.println("Original list size before: " + originalSize);
-        System.out.println("Original list size after: " + testBogies.size());
-        
-        assert testBogies.size() == originalSize : "Original list size changed";
-        
-        List<String> currentNames = new ArrayList<>();
-        for (Bogie bogie : testBogies) {
-            currentNames.add(bogie.getName());
-        }
-        assert currentNames.equals(originalNames) : "Original list contents were modified";
-        System.out.println("✓ PASSED: Original list integrity maintained\n");
-    }
-
-    /**
-     * Test: Passenger bogie aggregation
-     * Expected: Sum of only passenger bogie capacities
-     */
-    public void testReduce_PassengerBogiesOnly() {
-        setUp();
-        
-        int passengerTotal = testBogies.stream()
-                .filter(bogie -> "Passenger".equals(bogie.getType()))
-                .map(Bogie::getCapacity)
-                .reduce(0, Integer::sum);
-        
-        System.out.println("TEST: testReduce_PassengerBogiesOnly");
-        System.out.println("Expected: 396 seats (72+96+48+120+60)");
-        System.out.println("Actual: " + passengerTotal + " seats");
-        
-        assert passengerTotal == 396 : "Expected 396, got " + passengerTotal;
         System.out.println("✓ PASSED\n");
     }
 
     /**
-     * Test: Goods bogie aggregation
-     * Expected: Sum of only goods bogie capacities
+     * Test: Valid Cargo Code (PET-AB)
+     * Expected: Return true for properly formatted Cargo Code
      */
-    public void testReduce_GoodsBogiesOnly() {
-        setUp();
+    public void testRegex_ValidCargoCode() {
+        System.out.println("TEST: testRegex_ValidCargoCode");
+        String cargoCode = "PET-AB";
+        boolean result = validateCargoCode(cargoCode);
         
-        int goodsTotal = testBogies.stream()
-                .filter(bogie -> "Goods".equals(bogie.getType()))
-                .map(Bogie::getCapacity)
-                .reduce(0, Integer::sum);
+        System.out.println("Input: " + cargoCode);
+        System.out.println("Expected: true");
+        System.out.println("Actual: " + result);
         
-        System.out.println("TEST: testReduce_GoodsBogiesOnly");
-        System.out.println("Expected: 900 units (500+400)");
-        System.out.println("Actual: " + goodsTotal + " units");
-        
-        assert goodsTotal == 900 : "Expected 900, got " + goodsTotal;
+        assert result : "Valid Cargo Code should be accepted";
         System.out.println("✓ PASSED\n");
     }
 
     /**
-     * Test: Maximum capacity using reduce
-     * Expected: Largest bogie capacity value
+     * Test: Invalid Cargo Code Formats
+     * Expected: Return false for incorrectly formatted Cargo Codes
      */
-    public void testReduce_MaximumCapacity() {
-        setUp();
+    public void testRegex_InvalidCargoCodeFormat() {
+        System.out.println("TEST: testRegex_InvalidCargoCodeFormat");
+        String[] invalidCodes = {"PET-ab", "PET123", "AB-PET", "pet-AB", "PET_AB"};
         
-        int maxCapacity = testBogies.stream()
-                .map(Bogie::getCapacity)
-                .reduce(0, Integer::max);
+        for (String cargoCode : invalidCodes) {
+            boolean result = validateCargoCode(cargoCode);
+            System.out.println("Input: " + cargoCode + " -> " + (result ? "VALID" : "INVALID"));
+            assert !result : "Invalid Cargo Code " + cargoCode + " should be rejected";
+        }
+        System.out.println("✓ PASSED\n");
+    }
+
+    /**
+     * Test: Train ID Digit Length Validation
+     * Expected: Exactly 4 digits required
+     */
+    public void testRegex_TrainIDDigitLengthValidation() {
+        System.out.println("TEST: testRegex_TrainIDDigitLengthValidation");
+        String[] testCases = {"TRN-123", "TRN-12345"};
         
-        System.out.println("TEST: testReduce_MaximumCapacity");
-        System.out.println("Expected: 500 (Rectangular bogie)");
-        System.out.println("Actual: " + maxCapacity + " seats");
+        for (String trainId : testCases) {
+            boolean result = validateTrainID(trainId);
+            System.out.println("Input: " + trainId + " -> " + (result ? "VALID" : "INVALID"));
+            assert !result : "Train ID " + trainId + " with wrong digit count should be rejected";
+        }
+        System.out.println("✓ PASSED\n");
+    }
+
+    /**
+     * Test: Cargo Code Uppercase Validation
+     * Expected: Only uppercase letters allowed
+     */
+    public void testRegex_CargoCodeUppercaseValidation() {
+        System.out.println("TEST: testRegex_CargoCodeUppercaseValidation");
+        String[] testCases = {"PET-ab", "PET-Ab", "PET-aB"};
         
-        assert maxCapacity == 500 : "Expected 500, got " + maxCapacity;
+        for (String cargoCode : testCases) {
+            boolean result = validateCargoCode(cargoCode);
+            System.out.println("Input: " + cargoCode + " -> " + (result ? "VALID" : "INVALID"));
+            assert !result : "Cargo Code " + cargoCode + " with lowercase letters should be rejected";
+        }
+        System.out.println("✓ PASSED\n");
+    }
+
+    /**
+     * Test: Empty Input Handling
+     * Expected: Empty strings return false
+     */
+    public void testRegex_EmptyInputHandling() {
+        System.out.println("TEST: testRegex_EmptyInputHandling");
+        String emptyTrainId = "";
+        String emptyCargoCode = "";
+        
+        boolean trainIdResult = validateTrainID(emptyTrainId);
+        boolean cargoCodeResult = validateCargoCode(emptyCargoCode);
+        
+        System.out.println("Empty Train ID: " + (trainIdResult ? "VALID" : "INVALID"));
+        System.out.println("Empty Cargo Code: " + (cargoCodeResult ? "VALID" : "INVALID"));
+        
+        assert !trainIdResult : "Empty Train ID should be invalid";
+        assert !cargoCodeResult : "Empty Cargo Code should be invalid";
+        System.out.println("✓ PASSED\n");
+    }
+
+    /**
+     * Test: Exact Pattern Matching
+     * Expected: Partial matches are rejected
+     */
+    public void testRegex_ExactPatternMatch() {
+        System.out.println("TEST: testRegex_ExactPatternMatch");
+        String[] testCases = {"PREFIX-TRN-1234", "TRN-1234-SUFFIX", " TRN-1234"};
+        
+        for (String trainId : testCases) {
+            boolean result = validateTrainID(trainId);
+            System.out.println("Input: '" + trainId + "' -> " + (result ? "VALID" : "INVALID"));
+            assert !result : "Train ID '" + trainId + "' with extra characters should be rejected";
+        }
+        System.out.println("✓ PASSED\n");
+    }
+
+    /**
+     * Test: Null Input Handling
+     * Expected: Null values return false
+     */
+    public void testRegex_NullInputHandling() {
+        System.out.println("TEST: testRegex_NullInputHandling");
+        
+        boolean trainIdResult = validateTrainID(null);
+        boolean cargoCodeResult = validateCargoCode(null);
+        
+        System.out.println("Null Train ID: " + (trainIdResult ? "VALID" : "INVALID"));
+        System.out.println("Null Cargo Code: " + (cargoCodeResult ? "VALID" : "INVALID"));
+        
+        assert !trainIdResult : "Null Train ID should be invalid";
+        assert !cargoCodeResult : "Null Cargo Code should be invalid";
+        System.out.println("✓ PASSED\n");
+    }
+
+    /**
+     * Test: Multiple Valid Train IDs
+     * Expected: Multiple valid formats are accepted
+     */
+    public void testRegex_MultipleValidTrainIDs() {
+        System.out.println("TEST: testRegex_MultipleValidTrainIDs");
+        String[] validIds = {"TRN-0000", "TRN-1234", "TRN-5678", "TRN-9999"};
+        
+        for (String trainId : validIds) {
+            boolean result = validateTrainID(trainId);
+            System.out.println("Input: " + trainId + " -> " + (result ? "VALID" : "INVALID"));
+            assert result : "Valid Train ID " + trainId + " should be accepted";
+        }
+        System.out.println("✓ PASSED\n");
+    }
+
+    /**
+     * Test: Multiple Valid Cargo Codes
+     * Expected: Multiple valid formats are accepted
+     */
+    public void testRegex_MultipleValidCargoCodes() {
+        System.out.println("TEST: testRegex_MultipleValidCargoCodes");
+        String[] validCodes = {"PET-AA", "PET-AB", "PET-ZZ", "PET-MN"};
+        
+        for (String cargoCode : validCodes) {
+            boolean result = validateCargoCode(cargoCode);
+            System.out.println("Input: " + cargoCode + " -> " + (result ? "VALID" : "INVALID"));
+            assert result : "Valid Cargo Code " + cargoCode + " should be accepted";
+        }
         System.out.println("✓ PASSED\n");
     }
 
@@ -250,25 +228,26 @@ public class TrainConsistManagementAppTest {
      */
     public static void main(String[] args) {
         System.out.println("========================================");
-        System.out.println("UC10: Stream Reduction Test Suite");
+        System.out.println("UC11: Regex Validation Test Suite");
         System.out.println("========================================\n");
         
         TrainConsistManagementAppTest tester = new TrainConsistManagementAppTest();
         
         try {
-            tester.testReduce_TotalSeatCalculation();
-            tester.testReduce_MultipleBogiesAggregation();
-            tester.testReduce_SingleBogieCapacity();
-            tester.testReduce_EmptyBogieList();
-            tester.testReduce_CorrectCapacityExtraction();
-            tester.testReduce_AllBogiesIncluded();
-            tester.testReduce_OriginalListUnchanged();
-            tester.testReduce_PassengerBogiesOnly();
-            tester.testReduce_GoodsBogiesOnly();
-            tester.testReduce_MaximumCapacity();
+            tester.testRegex_ValidTrainID();
+            tester.testRegex_InvalidTrainIDFormat();
+            tester.testRegex_ValidCargoCode();
+            tester.testRegex_InvalidCargoCodeFormat();
+            tester.testRegex_TrainIDDigitLengthValidation();
+            tester.testRegex_CargoCodeUppercaseValidation();
+            tester.testRegex_EmptyInputHandling();
+            tester.testRegex_ExactPatternMatch();
+            tester.testRegex_NullInputHandling();
+            tester.testRegex_MultipleValidTrainIDs();
+            tester.testRegex_MultipleValidCargoCodes();
             
             System.out.println("========================================");
-            System.out.println("✓ ALL 10 TESTS PASSED!");
+            System.out.println("✓ ALL 11 TESTS PASSED!");
             System.out.println("========================================");
         } catch (AssertionError e) {
             System.out.println("\n✗ TEST FAILED: " + e.getMessage());
