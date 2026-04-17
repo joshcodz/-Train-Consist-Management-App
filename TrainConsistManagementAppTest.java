@@ -1,12 +1,13 @@
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
- * Test Cases for UC8: Filter Passenger Bogies Using Streams
+ * Test Cases for UC9: Group Bogies by Type (Collectors.groupingBy)
  * 
- * This test class verifies that the Stream API filtering operations work correctly
- * for various scenarios including boundary conditions and edge cases.
+ * This test class verifies that the Stream API grouping operations work correctly
+ * for various scenarios including boundary conditions and different grouping strategies.
  */
 public class TrainConsistManagementAppTest {
     
@@ -15,158 +16,175 @@ public class TrainConsistManagementAppTest {
     // Setup method - initializes test data
     public void setUp() {
         testBogies = new ArrayList<>();
-        testBogies.add(new Bogie("Sleeper", 72));
-        testBogies.add(new Bogie("AC Chair", 96));
-        testBogies.add(new Bogie("First Class", 48));
-        testBogies.add(new Bogie("General", 120));
-        testBogies.add(new Bogie("AC Sleeper", 60));
+        testBogies.add(new Bogie("Sleeper", "Passenger", 72));
+        testBogies.add(new Bogie("AC Chair", "Passenger", 96));
+        testBogies.add(new Bogie("First Class", "Passenger", 48));
+        testBogies.add(new Bogie("General", "Passenger", 120));
+        testBogies.add(new Bogie("AC Sleeper", "Passenger", 60));
+        testBogies.add(new Bogie("Rectangular", "Goods", 500));
+        testBogies.add(new Bogie("Cylindrical", "Goods", 400));
     }
 
     /**
-     * Test: Filter bogies with capacity greater than threshold (70)
-     * Expected: Only bogies with capacity > 70 should be returned
+     * Test: Bogies grouped by Type
+     * Expected: Two groups (Passenger and Goods) with correct counts
      */
-    public void testFilter_CapacityGreaterThanThreshold() {
+    public void testGrouping_BogiesGroupedByType() {
         setUp();
-        int threshold = 70;
         
-        List<Bogie> filtered = testBogies.stream()
-                .filter(bogie -> bogie.getCapacity() > threshold)
-                .collect(Collectors.toList());
+        Map<String, List<Bogie>> grouped = testBogies.stream()
+                .collect(Collectors.groupingBy(Bogie::getType));
         
-        System.out.println("TEST: testFilter_CapacityGreaterThanThreshold");
-        System.out.println("Expected: 3 bogies (Sleeper-72, AC Chair-96, General-120)");
-        System.out.println("Actual: " + filtered.size() + " bogies");
-        assert filtered.size() == 3 : "Expected 3 bogies, got " + filtered.size();
+        System.out.println("TEST: testGrouping_BogiesGroupedByType");
+        System.out.println("Expected: 2 groups (Passenger: 5, Goods: 2)");
+        System.out.println("Actual: " + grouped.size() + " groups");
         
-        // Verify each bogie has capacity > 70
-        for (Bogie bogie : filtered) {
-            assert bogie.getCapacity() > threshold : "Bogie " + bogie.getName() + " has capacity " + bogie.getCapacity() + " which is not > " + threshold;
+        assert grouped.size() == 2 : "Expected 2 groups, got " + grouped.size();
+        assert grouped.containsKey("Passenger") : "Missing 'Passenger' group";
+        assert grouped.containsKey("Goods") : "Missing 'Goods' group";
+        assert grouped.get("Passenger").size() == 5 : "Expected 5 passenger bogies";
+        assert grouped.get("Goods").size() == 2 : "Expected 2 goods bogies";
+        
+        System.out.println("✓ PASSED\n");
+    }
+
+    /**
+     * Test: Multiple bogies in same group
+     * Expected: Multiple bogies should be in the same group list
+     */
+    public void testGrouping_MultipleBogiesInSameGroup() {
+        setUp();
+        
+        Map<String, List<Bogie>> grouped = testBogies.stream()
+                .collect(Collectors.groupingBy(Bogie::getType));
+        
+        System.out.println("TEST: testGrouping_MultipleBogiesInSameGroup");
+        System.out.println("Expected: Passenger group has multiple bogies");
+        
+        List<Bogie> passengerBogies = grouped.get("Passenger");
+        assert passengerBogies.size() > 1 : "Expected multiple bogies in Passenger group";
+        
+        for (Bogie bogie : passengerBogies) {
+            assert "Passenger".equals(bogie.getType()) : "Bogie in wrong group";
         }
+        
+        System.out.println("Actual: Passenger group has " + passengerBogies.size() + " bogies");
         System.out.println("✓ PASSED\n");
     }
 
     /**
-     * Test: Filter bogies with capacity equal to threshold (70)
-     * Expected: No bogies should be returned (none have exactly 70 seats)
+     * Test: Different bogie types in different groups
+     * Expected: Each group should contain only one type
      */
-    public void testFilter_CapacityEqualToThreshold() {
+    public void testGrouping_DifferentBogieTypes() {
         setUp();
-        int threshold = 70;
         
-        List<Bogie> filtered = testBogies.stream()
-                .filter(bogie -> bogie.getCapacity() == threshold)
-                .collect(Collectors.toList());
+        Map<String, List<Bogie>> grouped = testBogies.stream()
+                .collect(Collectors.groupingBy(Bogie::getType));
         
-        System.out.println("TEST: testFilter_CapacityEqualToThreshold");
-        System.out.println("Expected: 0 bogies (no bogie with exactly 70 seats)");
-        System.out.println("Actual: " + filtered.size() + " bogies");
-        assert filtered.size() == 0 : "Expected 0 bogies, got " + filtered.size();
-        System.out.println("✓ PASSED\n");
-    }
-
-    /**
-     * Test: Filter bogies with capacity less than threshold (70)
-     * Expected: Only bogies with capacity < 70 should be returned
-     */
-    public void testFilter_CapacityLessThanThreshold() {
-        setUp();
-        int threshold = 70;
+        System.out.println("TEST: testGrouping_DifferentBogieTypes");
         
-        List<Bogie> filtered = testBogies.stream()
-                .filter(bogie -> bogie.getCapacity() < threshold)
-                .collect(Collectors.toList());
-        
-        System.out.println("TEST: testFilter_CapacityLessThanThreshold");
-        System.out.println("Expected: 2 bogies (First Class-48, AC Sleeper-60)");
-        System.out.println("Actual: " + filtered.size() + " bogies");
-        assert filtered.size() == 2 : "Expected 2 bogies, got " + filtered.size();
-        
-        // Verify each bogie has capacity < 70
-        for (Bogie bogie : filtered) {
-            assert bogie.getCapacity() < threshold : "Bogie " + bogie.getName() + " has capacity " + bogie.getCapacity() + " which is not < " + threshold;
+        for (String type : grouped.keySet()) {
+            List<Bogie> boggiesOfType = grouped.get(type);
+            for (Bogie bogie : boggiesOfType) {
+                assert type.equals(bogie.getType()) : "Bogie " + bogie.getName() + " in wrong type group";
+            }
+            System.out.println("Type: " + type + " contains " + boggiesOfType.size() + " bogies");
         }
+        
         System.out.println("✓ PASSED\n");
     }
 
     /**
-     * Test: Multiple matching bogies with combined filter condition
-     * Expected: All bogies matching capacity >= 60 AND <= 100
+     * Test: Empty bogie list grouping
+     * Expected: Empty map should be returned
      */
-    public void testFilter_MultipleBogiesMatching() {
-        setUp();
-        
-        List<Bogie> filtered = testBogies.stream()
-                .filter(bogie -> bogie.getCapacity() >= 60 && bogie.getCapacity() <= 100)
-                .collect(Collectors.toList());
-        
-        System.out.println("TEST: testFilter_MultipleBogiesMatching");
-        System.out.println("Expected: 3 bogies (Sleeper-72, AC Chair-96, AC Sleeper-60)");
-        System.out.println("Actual: " + filtered.size() + " bogies");
-        assert filtered.size() == 3 : "Expected 3 bogies, got " + filtered.size();
-        System.out.println("✓ PASSED\n");
-    }
-
-    /**
-     * Test: No bogies matching filter condition
-     * Expected: Empty list should be returned
-     */
-    public void testFilter_NoBogiesMatching() {
-        setUp();
-        
-        List<Bogie> filtered = testBogies.stream()
-                .filter(bogie -> bogie.getCapacity() > 1000)  // Extremely high threshold
-                .collect(Collectors.toList());
-        
-        System.out.println("TEST: testFilter_NoBogiesMatching");
-        System.out.println("Expected: 0 bogies (no bogie with capacity > 1000)");
-        System.out.println("Actual: " + filtered.size() + " bogies");
-        assert filtered.isEmpty() : "Expected empty list, but got " + filtered.size() + " bogies";
-        System.out.println("✓ PASSED\n");
-    }
-
-    /**
-     * Test: All bogies matching filter condition
-     * Expected: All original bogies should be returned
-     */
-    public void testFilter_AllBogiesMatching() {
-        setUp();
-        
-        List<Bogie> filtered = testBogies.stream()
-                .filter(bogie -> bogie.getCapacity() > 0)  // Very low threshold
-                .collect(Collectors.toList());
-        
-        System.out.println("TEST: testFilter_AllBogiesMatching");
-        System.out.println("Expected: 5 bogies (all original bogies)");
-        System.out.println("Actual: " + filtered.size() + " bogies");
-        assert filtered.size() == 5 : "Expected 5 bogies, got " + filtered.size();
-        assert filtered.size() == testBogies.size() : "Filtered list size should equal original list size";
-        System.out.println("✓ PASSED\n");
-    }
-
-    /**
-     * Test: Filtering an empty bogie list
-     * Expected: Empty list should be returned without errors
-     */
-    public void testFilter_EmptyBogieList() {
+    public void testGrouping_EmptyBogieList() {
         testBogies = new ArrayList<>();  // Empty list
         
-        List<Bogie> filtered = testBogies.stream()
-                .filter(bogie -> bogie.getCapacity() > 70)
-                .collect(Collectors.toList());
+        Map<String, List<Bogie>> grouped = testBogies.stream()
+                .collect(Collectors.groupingBy(Bogie::getType));
         
-        System.out.println("TEST: testFilter_EmptyBogieList");
-        System.out.println("Expected: 0 bogies (filtering empty list)");
-        System.out.println("Actual: " + filtered.size() + " bogies");
-        assert filtered.isEmpty() : "Expected empty list for empty input";
+        System.out.println("TEST: testGrouping_EmptyBogieList");
+        System.out.println("Expected: 0 groups (empty map)");
+        System.out.println("Actual: " + grouped.size() + " groups");
+        
+        assert grouped.isEmpty() : "Expected empty map, got " + grouped.size() + " groups";
         System.out.println("✓ PASSED\n");
     }
 
     /**
-     * Test: Original list remains unchanged after filtering
+     * Test: Single bogie category
+     * Expected: Map with one key containing all bogies
+     */
+    public void testGrouping_SingleBogieCategory() {
+        testBogies = new ArrayList<>();
+        testBogies.add(new Bogie("Sleeper", "Passenger", 72));
+        testBogies.add(new Bogie("AC Chair", "Passenger", 96));
+        
+        Map<String, List<Bogie>> grouped = testBogies.stream()
+                .collect(Collectors.groupingBy(Bogie::getType));
+        
+        System.out.println("TEST: testGrouping_SingleBogieCategory");
+        System.out.println("Expected: 1 group (all Passenger)");
+        System.out.println("Actual: " + grouped.size() + " groups");
+        
+        assert grouped.size() == 1 : "Expected 1 group, got " + grouped.size();
+        assert grouped.containsKey("Passenger") : "Expected 'Passenger' group";
+        assert grouped.get("Passenger").size() == 2 : "Expected 2 bogies in group";
+        
+        System.out.println("✓ PASSED\n");
+    }
+
+    /**
+     * Test: Map contains correct keys
+     * Expected: All group keys should match the expected types
+     */
+    public void testGrouping_MapContainsCorrectKeys() {
+        setUp();
+        
+        Map<String, List<Bogie>> grouped = testBogies.stream()
+                .collect(Collectors.groupingBy(Bogie::getType));
+        
+        System.out.println("TEST: testGrouping_MapContainsCorrectKeys");
+        System.out.println("Expected keys: 'Passenger', 'Goods'");
+        System.out.println("Actual keys: " + grouped.keySet());
+        
+        assert grouped.keySet().contains("Passenger") : "Missing 'Passenger' key";
+        assert grouped.keySet().contains("Goods") : "Missing 'Goods' key";
+        
+        System.out.println("✓ PASSED\n");
+    }
+
+    /**
+     * Test: Group size validation
+     * Expected: Each group should have the correct number of bogies
+     */
+    public void testGrouping_GroupSizeValidation() {
+        setUp();
+        
+        Map<String, List<Bogie>> grouped = testBogies.stream()
+                .collect(Collectors.groupingBy(Bogie::getType));
+        
+        System.out.println("TEST: testGrouping_GroupSizeValidation");
+        System.out.println("Expected: Passenger=5 bogies, Goods=2 bogies");
+        
+        int passengerCount = grouped.get("Passenger").size();
+        int goodsCount = grouped.get("Goods").size();
+        
+        System.out.println("Actual: Passenger=" + passengerCount + " bogies, Goods=" + goodsCount + " bogies");
+        
+        assert passengerCount == 5 : "Expected 5 passenger bogies, got " + passengerCount;
+        assert goodsCount == 2 : "Expected 2 goods bogies, got " + goodsCount;
+        
+        System.out.println("✓ PASSED\n");
+    }
+
+    /**
+     * Test: Original list remains unchanged after grouping
      * Expected: Original collection should have same size and contents
      */
-    public void testFilter_OriginalListUnchanged() {
+    public void testGrouping_OriginalListUnchanged() {
         setUp();
         int originalSize = testBogies.size();
         List<String> originalNames = new ArrayList<>();
@@ -174,24 +192,77 @@ public class TrainConsistManagementAppTest {
             originalNames.add(bogie.getName());
         }
         
-        // Perform filtering operation
-        List<Bogie> filtered = testBogies.stream()
-                .filter(bogie -> bogie.getCapacity() > 70)
-                .collect(Collectors.toList());
+        // Perform grouping operation
+        Map<String, List<Bogie>> grouped = testBogies.stream()
+                .collect(Collectors.groupingBy(Bogie::getType));
         
-        System.out.println("TEST: testFilter_OriginalListUnchanged");
+        System.out.println("TEST: testGrouping_OriginalListUnchanged");
         System.out.println("Original list size before: " + originalSize);
         System.out.println("Original list size after: " + testBogies.size());
-        System.out.println("Filtered list size: " + filtered.size());
         
-        assert testBogies.size() == originalSize : "Original list size changed from " + originalSize + " to " + testBogies.size();
+        assert testBogies.size() == originalSize : "Original list size changed";
         
         List<String> currentNames = new ArrayList<>();
         for (Bogie bogie : testBogies) {
             currentNames.add(bogie.getName());
         }
         assert currentNames.equals(originalNames) : "Original list contents were modified";
+        
         System.out.println("✓ PASSED: Original list integrity maintained\n");
+    }
+
+    /**
+     * Test: Grouping by name field
+     * Expected: Each bogie name should be a different key
+     */
+    public void testGrouping_GroupingByName() {
+        setUp();
+        
+        Map<String, List<Bogie>> groupedByName = testBogies.stream()
+                .collect(Collectors.groupingBy(Bogie::getName));
+        
+        System.out.println("TEST: testGrouping_GroupingByName");
+        System.out.println("Expected: 7 groups (one per unique bogie name)");
+        System.out.println("Actual: " + groupedByName.size() + " groups");
+        
+        assert groupedByName.size() == 7 : "Expected 7 groups, got " + groupedByName.size();
+        
+        for (String name : groupedByName.keySet()) {
+            assert groupedByName.get(name).size() == 1 : "Each name group should have 1 bogie";
+            System.out.println("  Group '" + name + "': " + groupedByName.get(name).size() + " bogie");
+        }
+        
+        System.out.println("✓ PASSED\n");
+    }
+
+    /**
+     * Test: Grouping by capacity range
+     * Expected: Bogies should be grouped into capacity ranges
+     */
+    public void testGrouping_GroupingByCapacityRange() {
+        setUp();
+        
+        Map<String, List<Bogie>> groupedByRange = testBogies.stream()
+                .collect(Collectors.groupingBy(bogie -> {
+                    if (bogie.getCapacity() < 100) {
+                        return "Low";
+                    } else if (bogie.getCapacity() <= 200) {
+                        return "Medium";
+                    } else {
+                        return "High";
+                    }
+                }));
+        
+        System.out.println("TEST: testGrouping_GroupingByCapacityRange");
+        System.out.println("Expected: 3 ranges (Low, Medium, High)");
+        System.out.println("Actual: " + groupedByRange.size() + " ranges");
+        
+        assert groupedByRange.size() == 3 : "Expected 3 capacity ranges";
+        assert groupedByRange.get("Low").size() == 4 : "Expected 4 low-capacity bogies";
+        assert groupedByRange.get("Medium").size() == 1 : "Expected 1 medium-capacity bogie";
+        assert groupedByRange.get("High").size() == 2 : "Expected 2 high-capacity bogies";
+        
+        System.out.println("✓ PASSED\n");
     }
 
     /**
@@ -199,23 +270,25 @@ public class TrainConsistManagementAppTest {
      */
     public static void main(String[] args) {
         System.out.println("========================================");
-        System.out.println("UC8: Stream Filtering Test Suite");
+        System.out.println("UC9: Stream Grouping Test Suite");
         System.out.println("========================================\n");
         
         TrainConsistManagementAppTest tester = new TrainConsistManagementAppTest();
         
         try {
-            tester.testFilter_CapacityGreaterThanThreshold();
-            tester.testFilter_CapacityEqualToThreshold();
-            tester.testFilter_CapacityLessThanThreshold();
-            tester.testFilter_MultipleBogiesMatching();
-            tester.testFilter_NoBogiesMatching();
-            tester.testFilter_AllBogiesMatching();
-            tester.testFilter_EmptyBogieList();
-            tester.testFilter_OriginalListUnchanged();
+            tester.testGrouping_BogiesGroupedByType();
+            tester.testGrouping_MultipleBogiesInSameGroup();
+            tester.testGrouping_DifferentBogieTypes();
+            tester.testGrouping_EmptyBogieList();
+            tester.testGrouping_SingleBogieCategory();
+            tester.testGrouping_MapContainsCorrectKeys();
+            tester.testGrouping_GroupSizeValidation();
+            tester.testGrouping_OriginalListUnchanged();
+            tester.testGrouping_GroupingByName();
+            tester.testGrouping_GroupingByCapacityRange();
             
             System.out.println("========================================");
-            System.out.println("✓ ALL TESTS PASSED!");
+            System.out.println("✓ ALL 10 TESTS PASSED!");
             System.out.println("========================================");
         } catch (AssertionError e) {
             System.out.println("\n✗ TEST FAILED: " + e.getMessage());
