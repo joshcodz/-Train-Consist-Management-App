@@ -1,7 +1,6 @@
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.List;
+import java.util.stream.Collectors;
 
 class Bogie {
     private String name;
@@ -28,7 +27,7 @@ class Bogie {
 
 public class TrainConsistManagementApp {
     public static void main(String[] args) {
-        System.out.println("=== Train Consist Management App - UC7: Sort Bogies by Capacity ===\n");
+        System.out.println("=== Train Consist Management App - UC8: Filter Passenger Bogies Using Streams ===\n");
 
         // Create a List to store bogie objects
         List<Bogie> bogies = new ArrayList<>();
@@ -46,26 +45,77 @@ public class TrainConsistManagementApp {
             System.out.println("  " + bogie);
         }
 
-        // Sort bogies by capacity in ascending order using Comparator.comparingInt()
-        System.out.println("\nSorting bogies by capacity (ascending)...\n");
-        Collections.sort(bogies, Comparator.comparingInt(Bogie::getCapacity));
+        // UC8: Filter using Stream API
+        System.out.println("\n=== UC8: Stream Filtering Examples ===\n");
 
-        System.out.println("Sorted Bogie List (by capacity):");
-        System.out.println("--------------------------------");
-        for (Bogie bogie : bogies) {
-            System.out.println("  " + bogie);
+        // Filter 1: Capacity greater than 70
+        System.out.println("Filter 1: High-capacity bogies (capacity > 70):");
+        System.out.println("----------------------------------------------");
+        List<Bogie> highCapacityBogies = bogies.stream()
+                .filter(bogie -> bogie.getCapacity() > 70)
+                .collect(Collectors.toList());
+        
+        if (highCapacityBogies.isEmpty()) {
+            System.out.println("  No bogies found.");
+        } else {
+            for (Bogie bogie : highCapacityBogies) {
+                System.out.println("  " + bogie);
+            }
+        }
+        System.out.println("  Total high-capacity bogies: " + highCapacityBogies.size());
+
+        // Filter 2: Capacity equal to threshold value (70)
+        System.out.println("\nFilter 2: Bogies with capacity equal to 70:");
+        System.out.println("-------------------------------------------");
+        List<Bogie> equalThresholdBogies = bogies.stream()
+                .filter(bogie -> bogie.getCapacity() == 70)
+                .collect(Collectors.toList());
+        
+        if (equalThresholdBogies.isEmpty()) {
+            System.out.println("  No bogies found with capacity = 70.");
+        } else {
+            for (Bogie bogie : equalThresholdBogies) {
+                System.out.println("  " + bogie);
+            }
         }
 
-        // Sort in descending order using reversed()
-        System.out.println("\nSorting bogies by capacity (descending)...\n");
-        Collections.sort(bogies, Comparator.comparingInt(Bogie::getCapacity).reversed());
-
-        System.out.println("Sorted Bogie List (descending by capacity):");
-        System.out.println("------------------------------------------");
-        for (Bogie bogie : bogies) {
-            System.out.println("  " + bogie);
+        // Filter 3: Capacity less than 70
+        System.out.println("\nFilter 3: Low-capacity bogies (capacity < 70):");
+        System.out.println("----------------------------------------------");
+        List<Bogie> lowCapacityBogies = bogies.stream()
+                .filter(bogie -> bogie.getCapacity() < 70)
+                .collect(Collectors.toList());
+        
+        if (lowCapacityBogies.isEmpty()) {
+            System.out.println("  No bogies found.");
+        } else {
+            for (Bogie bogie : lowCapacityBogies) {
+                System.out.println("  " + bogie);
+            }
         }
+        System.out.println("  Total low-capacity bogies: " + lowCapacityBogies.size());
 
-        System.out.println("\nTotal passenger bogies in formation: " + bogies.size());
+        // Filter 4: Multiple conditions - capacity >= 60 AND <= 100
+        System.out.println("\nFilter 4: Medium-capacity bogies (capacity between 60 and 100):");
+        System.out.println("-------------------------------------------------------------");
+        List<Bogie> mediumCapacityBogies = bogies.stream()
+                .filter(bogie -> bogie.getCapacity() >= 60 && bogie.getCapacity() <= 100)
+                .collect(Collectors.toList());
+        
+        if (mediumCapacityBogies.isEmpty()) {
+            System.out.println("  No bogies found.");
+        } else {
+            for (Bogie bogie : mediumCapacityBogies) {
+                System.out.println("  " + bogie);
+            }
+        }
+        System.out.println("  Total medium-capacity bogies: " + mediumCapacityBogies.size());
+
+        // Verify original list integrity
+        System.out.println("\n=== Verify Original Collection Integrity ===");
+        System.out.println("Original collection size: " + bogies.size());
+        System.out.println("Original bagios unchanged: " + (bogies.size() == 5));
+
+        System.out.println("\n=== Stream Filtering Complete ===");
     }
 }
