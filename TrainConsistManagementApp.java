@@ -7,11 +7,17 @@ class Bogie {
     private String name;
     private String type;
     private int capacity;
+    private String cargo;      // New field for cargo type (UC12)
 
     public Bogie(String name, String type, int capacity) {
+        this(name, type, capacity, null);
+    }
+
+    public Bogie(String name, String type, int capacity, String cargo) {
         this.name = name;
         this.type = type;
         this.capacity = capacity;
+        this.cargo = cargo;
     }
 
     public String getName() {
@@ -26,23 +32,30 @@ class Bogie {
         return capacity;
     }
 
+    public String getCargo() {
+        return cargo;
+    }
+
     @Override
     public String toString() {
+        if (cargo != null) {
+            return name + " (" + type + ", " + capacity + ", cargo: " + cargo + ")";
+        }
         return name + " (" + type + ", " + capacity + " seats)";
     }
 }
 
 public class TrainConsistManagementApp {
-    // Define regex patterns for validation
+    // Define regex patterns for validation (UC11)
     private static final String TRAIN_ID_PATTERN = "TRN-\\d{4}";
     private static final String CARGO_CODE_PATTERN = "PET-[A-Z]{2}";
     
-    // Compile patterns for efficiency
+    // Compile patterns for efficiency (UC11)
     private static final Pattern trainIdPattern = Pattern.compile(TRAIN_ID_PATTERN);
     private static final Pattern cargoCodePattern = Pattern.compile(CARGO_CODE_PATTERN);
 
     /**
-     * Validate Train ID format
+     * Validate Train ID format (UC11)
      * @param trainId The train ID to validate
      * @return true if valid, false otherwise
      */
@@ -55,7 +68,7 @@ public class TrainConsistManagementApp {
     }
 
     /**
-     * Validate Cargo Code format
+     * Validate Cargo Code format (UC11)
      * @param cargoCode The cargo code to validate
      * @return true if valid, false otherwise
      */
@@ -67,8 +80,31 @@ public class TrainConsistManagementApp {
         return matcher.matches();
     }
 
+    /**
+     * UC12: Check safety compliance for goods bogies
+     * Enforces business rule: Cylindrical bogies must carry only Petroleum
+     * Uses allMatch() to validate all bogies in the stream
+     * @param goodsBogies List of goods bogies to validate
+     * @return true if all bogies comply with safety rules, false otherwise
+     */
+    public static boolean checkSafetyCompliance(List<Bogie> goodsBogies) {
+        if (goodsBogies == null || goodsBogies.isEmpty()) {
+            return true;  // No bogies = no violations
+        }
+        
+        return goodsBogies.stream()
+                .allMatch(bogie -> {
+                    // Safety Rule: Cylindrical bogies must carry only Petroleum
+                    if (bogie.getName() != null && bogie.getName().startsWith("Cylindrical")) {
+                        return "Petroleum".equals(bogie.getCargo());
+                    }
+                    // Other bogie types (Open, Box, etc.) can carry any cargo
+                    return true;
+                });
+    }
+
     public static void main(String[] args) {
-        System.out.println("=== Train Consist Management App - UC11: Validate Train ID & Cargo Codes ===\n");
+        System.out.println("=== Train Consist Management App - UC12: Safety Compliance Check ===\n");
 
         // Create a List to store bogie objects
         List<Bogie> bogies = new ArrayList<>();
@@ -79,67 +115,99 @@ public class TrainConsistManagementApp {
         bogies.add(new Bogie("First Class", "Passenger", 48));
         bogies.add(new Bogie("General", "Passenger", 120));
         bogies.add(new Bogie("AC Sleeper", "Passenger", 60));
-        bogies.add(new Bogie("Rectangular", "Goods", 500));
-        bogies.add(new Bogie("Cylindrical", "Goods", 400));
 
-        System.out.println("Original Bogie List:");
-        System.out.println("-------------------");
+        System.out.println("Original Bogie List (Mixed Passenger & Goods):");
+        System.out.println("-------------------------------------------");
         for (Bogie bogie : bogies) {
             System.out.println("  " + bogie);
         }
 
-        // UC11: Regex Validation Examples
-        System.out.println("\n=== UC11: Regex Validation Examples ===\n");
+        // UC12: Safety Compliance Check for Goods Bogies
+        System.out.println("\n=== UC12: Safety Compliance Check Using allMatch() ===\n");
 
-        // Test case 1: Valid Train ID
-        System.out.println("Validation 1: Train ID Format");
-        System.out.println("-----------------------------");
-        String[] trainIds = {"TRN-1234", "TRAIN12", "TRN12A", "1234-TRN", "TRN-123", "TRN-12345"};
-        for (String trainId : trainIds) {
-            boolean isValid = validateTrainID(trainId);
-            System.out.println("Train ID: " + trainId + " -> " + (isValid ? "✓ VALID" : "✗ INVALID"));
+        // Test Case 1: All valid cylindrical bogies with Petroleum
+        System.out.println("Test Case 1: Valid Train Formation (All Cylindrical with Petroleum)");
+        System.out.println("--------------------------------------------------------------");
+        List<Bogie> validTrain = new ArrayList<>();
+        validTrain.add(new Bogie("Cylindrical-A", "Goods", 500, "Petroleum"));
+        validTrain.add(new Bogie("Cylindrical-B", "Goods", 500, "Petroleum"));
+        validTrain.add(new Bogie("Box-A", "Goods", 400, "Coal"));
+        
+        System.out.println("Goods Bogies:");
+        for (Bogie bogie : validTrain) {
+            System.out.println("  " + bogie);
         }
+        
+        boolean isSafe1 = checkSafetyCompliance(validTrain);
+        System.out.println("Safety Compliance Result: " + (isSafe1 ? "✓ SAFE" : "✗ UNSAFE"));
 
-        // Test case 2: Valid Cargo Code
-        System.out.println("\nValidation 2: Cargo Code Format");
-        System.out.println("-------------------------------");
-        String[] cargoCodes = {"PET-AB", "PET-ab", "PET123", "AB-PET", "PET-A", "PET-ABC"};
-        for (String cargoCode : cargoCodes) {
-            boolean isValid = validateCargoCode(cargoCode);
-            System.out.println("Cargo Code: " + cargoCode + " -> " + (isValid ? "✓ VALID" : "✗ INVALID"));
+        // Test Case 2: Cylindrical bogie with wrong cargo (violates rule)
+        System.out.println("\nTest Case 2: Invalid Train Formation (Cylindrical with Coal)");
+        System.out.println("-----------------------------------------------------");
+        List<Bogie> invalidTrain = new ArrayList<>();
+        invalidTrain.add(new Bogie("Cylindrical-A", "Goods", 500, "Petroleum"));
+        invalidTrain.add(new Bogie("Cylindrical-B", "Goods", 500, "Coal"));  // VIOLATION!
+        invalidTrain.add(new Bogie("Open-A", "Goods", 600, "Grain"));
+        
+        System.out.println("Goods Bogies:");
+        for (Bogie bogie : invalidTrain) {
+            System.out.println("  " + bogie);
         }
+        
+        boolean isSafe2 = checkSafetyCompliance(invalidTrain);
+        System.out.println("Safety Compliance Result: " + (isSafe2 ? "✓ SAFE" : "✗ UNSAFE"));
 
-        // Test case 3: Empty input handling
-        System.out.println("\nValidation 3: Empty Input Handling");
-        System.out.println("----------------------------------");
-        String emptyTrainId = "";
-        String emptyCargoCode = "";
-        System.out.println("Empty Train ID: '" + emptyTrainId + "' -> " + (validateTrainID(emptyTrainId) ? "✓ VALID" : "✗ INVALID"));
-        System.out.println("Empty Cargo Code: '" + emptyCargoCode + "' -> " + (validateCargoCode(emptyCargoCode) ? "✓ VALID" : "✗ INVALID"));
+        // Test Case 3: Non-cylindrical bogies with flexible cargo
+        System.out.println("\nTest Case 3: Non-Cylindrical Bogies (Flexible Cargo Rules)");
+        System.out.println("------------------------------------------------");
+        List<Bogie> flexibleTrain = new ArrayList<>();
+        flexibleTrain.add(new Bogie("Open-A", "Goods", 600, "Coal"));
+        flexibleTrain.add(new Bogie("Box-A", "Goods", 400, "Grain"));
+        flexibleTrain.add(new Bogie("Box-B", "Goods", 400, "Petroleum"));
+        
+        System.out.println("Goods Bogies:");
+        for (Bogie bogie : flexibleTrain) {
+            System.out.println("  " + bogie);
+        }
+        
+        boolean isSafe3 = checkSafetyCompliance(flexibleTrain);
+        System.out.println("Safety Compliance Result: " + (isSafe3 ? "✓ SAFE" : "✗ UNSAFE"));
 
-        // Test case 4: Null input handling
-        System.out.println("\nValidation 4: Null Input Handling");
+        // Test Case 4: Mixed bogies with one violation
+        System.out.println("\nTest Case 4: Mixed Bogie Types with One Violation");
+        System.out.println("----------------------------------------------");
+        List<Bogie> mixedTrain = new ArrayList<>();
+        mixedTrain.add(new Bogie("Cylindrical-A", "Goods", 500, "Petroleum"));
+        mixedTrain.add(new Bogie("Open-A", "Goods", 600, "Coal"));
+        mixedTrain.add(new Bogie("Cylindrical-B", "Goods", 500, "Grain"));  // VIOLATION!
+        mixedTrain.add(new Bogie("Box-A", "Goods", 400, "Coal"));
+        
+        System.out.println("Goods Bogies:");
+        for (Bogie bogie : mixedTrain) {
+            System.out.println("  " + bogie);
+        }
+        
+        boolean isSafe4 = checkSafetyCompliance(mixedTrain);
+        System.out.println("Safety Compliance Result: " + (isSafe4 ? "✓ SAFE" : "✗ UNSAFE"));
+
+        // Test Case 5: Empty bogie list
+        System.out.println("\nTest Case 5: Empty Goods Bogie List");
         System.out.println("---------------------------------");
-        System.out.println("Null Train ID -> " + (validateTrainID(null) ? "✓ VALID" : "✗ INVALID"));
-        System.out.println("Null Cargo Code -> " + (validateCargoCode(null) ? "✓ VALID" : "✗ INVALID"));
+        List<Bogie> emptyTrain = new ArrayList<>();
+        System.out.println("Goods Bogies: (none)");
+        
+        boolean isSafe5 = checkSafetyCompliance(emptyTrain);
+        System.out.println("Safety Compliance Result: " + (isSafe5 ? "✓ SAFE" : "✗ UNSAFE"));
 
-        // Test case 5: Real-world scenario
-        System.out.println("\nValidation 5: Real-World Scenario");
-        System.out.println("--------------------------------");
-        String trainId = "TRN-5678";
-        String cargoCode = "PET-CD";
-        System.out.println("Train ID: " + trainId + " -> " + (validateTrainID(trainId) ? "✓ VALID" : "✗ INVALID"));
-        System.out.println("Cargo Code: " + cargoCode + " -> " + (validateCargoCode(cargoCode) ? "✓ VALID" : "✗ INVALID"));
+        // Display key concepts
+        System.out.println("\n=== Key Concepts Used in UC12 ===");
+        System.out.println("• Streams API – Declarative data processing");
+        System.out.println("• allMatch() – Validates all elements satisfy a condition");
+        System.out.println("• Lambda Expressions – Inline validation rules");
+        System.out.println("• Conditional Logic – Enforce domain-specific constraints");
+        System.out.println("• Short-Circuit Evaluation – Stops when first violation found");
+        System.out.println("• Business Rule Modeling – Real-world safety policies as code");
 
-        if (validateTrainID(trainId) && validateCargoCode(cargoCode)) {
-            System.out.println("✓ Train " + trainId + " with cargo " + cargoCode + " is properly formatted and ready for processing.");
-        }
-
-        // Display regex patterns for reference
-        System.out.println("\n=== Regex Patterns Used ===");
-        System.out.println("Train ID Pattern: " + TRAIN_ID_PATTERN);
-        System.out.println("Cargo Code Pattern: " + CARGO_CODE_PATTERN);
-
-        System.out.println("\n=== Regex Validation Complete ===");
+        System.out.println("\n=== Safety Compliance Check Complete ===");
     }
 }
