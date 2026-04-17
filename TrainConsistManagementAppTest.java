@@ -2,155 +2,146 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class TrainConsistManagementAppTest {
-    static class Bogie {
-        private String name, type;
-        private int capacity;
-        private String cargo;
+    int passedTests = 0;
+    int failedTests = 0;
 
-        public Bogie(String n, String t, int c) { name=n; type=t; capacity=c; cargo=null; }
-        public Bogie(String n, String t, int c, String g) { name=n; type=t; capacity=c; cargo=g; }
-        public String getName() { return name; }
-        public String getType() { return type; }
-        public int getCapacity() { return capacity; }
-        public String getCargo() { return cargo; }
-    }
-
-    static class PerformanceResult {
-        public List<Bogie> result;
-        public long executionTimeNanos;
-        public PerformanceResult(List<Bogie> r, long t) { result=r; executionTimeNanos=t; }
-        public double getExecutionTimeMillis() { return executionTimeNanos/1_000_000.0; }
-    }
-
-    public static List<Bogie> filterBogiesByLoop(List<Bogie> bogies, int minCapacity) {
-        List<Bogie> filtered = new ArrayList<>();
-        for (Bogie bogie : bogies) {
-            if (bogie.getCapacity() > minCapacity) filtered.add(bogie);
+    public void testException_ValidCapacityCreation() {
+        System.out.println("TEST: testException_ValidCapacityCreation");
+        try {
+            Bogie validBogie = new Bogie("Sleeper", "Passenger", 72);
+            System.out.println("  Created successfully: " + validBogie);
+            System.out.println("  Type: " + validBogie.getType());
+            System.out.println("  Capacity: " + validBogie.getCapacity());
+            assert validBogie.getCapacity() == 72 : "Capacity should be 72";
+            assert "Passenger".equals(validBogie.getType()) : "Type should be Passenger";
+            System.out.println("✓ PASSED\n");
+            passedTests++;
+        } catch (InvalidCapacityException e) {
+            System.out.println("✗ FAILED: Unexpected exception: " + e.getMessage() + "\n");
+            failedTests++;
         }
-        return filtered;
     }
 
-    public static List<Bogie> filterBogiesByStream(List<Bogie> bogies, int minCapacity) {
-        return bogies.stream().filter(bogie -> bogie.getCapacity() > minCapacity).collect(java.util.stream.Collectors.toList());
+    public void testException_NegativeCapacityThrowsException() {
+        System.out.println("TEST: testException_NegativeCapacityThrowsException");
+        try {
+            Bogie negativeBogie = new Bogie("TestBogie", "Passenger", -10);
+            System.out.println("✗ FAILED: Should have thrown InvalidCapacityException\n");
+            failedTests++;
+        } catch (InvalidCapacityException e) {
+            System.out.println("  Caught exception: " + e.getMessage());
+            assert e.getMessage().equals("Capacity must be greater than zero") : "Message should match";
+            System.out.println("✓ PASSED\n");
+            passedTests++;
+        }
     }
 
-    public static PerformanceResult benchmarkLoopFiltering(List<Bogie> bogies, int minCapacity) {
-        long startTime = System.nanoTime();
-        List<Bogie> result = filterBogiesByLoop(bogies, minCapacity);
-        long endTime = System.nanoTime();
-        return new PerformanceResult(result, endTime - startTime);
+    public void testException_ZeroCapacityThrowsException() {
+        System.out.println("TEST: testException_ZeroCapacityThrowsException");
+        try {
+            Bogie zeroBogie = new Bogie("TestBogie", "Passenger", 0);
+            System.out.println("✗ FAILED: Should have thrown InvalidCapacityException\n");
+            failedTests++;
+        } catch (InvalidCapacityException e) {
+            System.out.println("  Caught exception: " + e.getMessage());
+            assert e.getMessage().equals("Capacity must be greater than zero") : "Message should match";
+            System.out.println("✓ PASSED\n");
+            passedTests++;
+        }
     }
 
-    public static PerformanceResult benchmarkStreamFiltering(List<Bogie> bogies, int minCapacity) {
-        long startTime = System.nanoTime();
-        List<Bogie> result = filterBogiesByStream(bogies, minCapacity);
-        long endTime = System.nanoTime();
-        return new PerformanceResult(result, endTime - startTime);
+    public void testException_ExceptionMessageValidation() {
+        System.out.println("TEST: testException_ExceptionMessageValidation");
+        String expectedMessage = "Capacity must be greater than zero";
+        try {
+            Bogie invalidBogie = new Bogie("TestBogie", "Goods", -50);
+            System.out.println("✗ FAILED: Should have thrown InvalidCapacityException\n");
+            failedTests++;
+        } catch (InvalidCapacityException e) {
+            System.out.println("  Expected message: " + expectedMessage);
+            System.out.println("  Actual message:   " + e.getMessage());
+            assert expectedMessage.equals(e.getMessage()) : "Exception message should be exact";
+            System.out.println("✓ PASSED\n");
+            passedTests++;
+        }
     }
 
-    public void testLoopFilteringLogic() {
-        System.out.println("TEST: testLoopFilteringLogic");
-        List<Bogie> bogies = new ArrayList<>();
-        bogies.add(new Bogie("B1", "P", 50));
-        bogies.add(new Bogie("B2", "P", 60));
-        bogies.add(new Bogie("B3", "P", 70));
-        bogies.add(new Bogie("B4", "P", 90));
-        List<Bogie> filtered = filterBogiesByLoop(bogies, 60);
-        assert filtered.size() == 2 && filtered.get(0).getCapacity() == 70 && filtered.get(1).getCapacity() == 90;
-        System.out.println("✓ PASSED\n");
+    public void testException_ObjectIntegrityAfterCreation() {
+        System.out.println("TEST: testException_ObjectIntegrityAfterCreation");
+        try {
+            Bogie bogie = new Bogie("AC Chair", "Passenger", 96, null);
+            System.out.println("  Created: " + bogie);
+            System.out.println("  Validating properties:");
+            System.out.println("    Name: " + bogie.getName());
+            assert "AC Chair".equals(bogie.getName()) : "Name should match";
+            System.out.println("    Type: " + bogie.getType());
+            assert "Passenger".equals(bogie.getType()) : "Type should match";
+            System.out.println("    Capacity: " + bogie.getCapacity());
+            assert 96 == bogie.getCapacity() : "Capacity should match";
+            System.out.println("    Cargo: " + bogie.getCargo());
+            assert bogie.getCargo() == null : "Cargo should be null";
+            System.out.println("✓ PASSED\n");
+            passedTests++;
+        } catch (InvalidCapacityException e) {
+            System.out.println("✗ FAILED: Unexpected exception: " + e.getMessage() + "\n");
+            failedTests++;
+        }
     }
 
-    public void testStreamFilteringLogic() {
-        System.out.println("TEST: testStreamFilteringLogic");
-        List<Bogie> bogies = new ArrayList<>();
-        bogies.add(new Bogie("B1", "P", 50));
-        bogies.add(new Bogie("B2", "P", 60));
-        bogies.add(new Bogie("B3", "P", 70));
-        bogies.add(new Bogie("B4", "P", 90));
-        List<Bogie> filtered = filterBogiesByStream(bogies, 60);
-        assert filtered.size() == 2 && filtered.get(0).getCapacity() == 70 && filtered.get(1).getCapacity() == 90;
-        System.out.println("✓ PASSED\n");
-    }
-
-    public void testLoopAndStreamResultsMatch() {
-        System.out.println("TEST: testLoopAndStreamResultsMatch");
-        List<Bogie> bogies = new ArrayList<>();
-        for (int i = 0; i < 100; i++) bogies.add(new Bogie("B"+i, "G", 40+(i%80)));
-        List<Bogie> loopResult = filterBogiesByLoop(bogies, 60);
-        List<Bogie> streamResult = filterBogiesByStream(bogies, 60);
-        assert loopResult.size() == streamResult.size();
-        System.out.println("✓ PASSED\n");
-    }
-
-    public void testExecutionTimeMeasurement() {
-        System.out.println("TEST: testExecutionTimeMeasurement");
-        List<Bogie> bogies = new ArrayList<>();
-        for (int i = 0; i < 1000; i++) bogies.add(new Bogie("B"+i, "G", 40+(i%100)));
-        PerformanceResult loopResult = benchmarkLoopFiltering(bogies, 60);
-        PerformanceResult streamResult = benchmarkStreamFiltering(bogies, 60);
-        assert loopResult.executionTimeNanos > 0 && streamResult.executionTimeNanos > 0;
-        System.out.println("✓ PASSED\n");
-    }
-
-    public void testLargeDatasetProcessing() {
-        System.out.println("TEST: testLargeDatasetProcessing");
-        List<Bogie> bogies = new ArrayList<>();
-        for (int i = 0; i < 10000; i++) bogies.add(new Bogie("B"+i, "G", 40+(i%100)));
-        List<Bogie> loopResult = filterBogiesByLoop(bogies, 60);
-        List<Bogie> streamResult = filterBogiesByStream(bogies, 60);
-        assert loopResult.size() > 0 && loopResult.size() == streamResult.size();
-        System.out.println("✓ PASSED\n");
-    }
-
-    public void testPerformanceComparisonSmall() {
-        System.out.println("TEST: testPerformanceComparisonSmall");
-        List<Bogie> bogies = new ArrayList<>();
-        for (int i = 0; i < 100; i++) bogies.add(new Bogie("B"+i, "G", 40+(i%80)));
-        PerformanceResult loopResult = benchmarkLoopFiltering(bogies, 60);
-        PerformanceResult streamResult = benchmarkStreamFiltering(bogies, 60);
-        assert loopResult.result.size() == streamResult.result.size();
-        System.out.println("✓ PASSED\n");
-    }
-
-    public void testPerformanceComparisonLarge() {
-        System.out.println("TEST: testPerformanceComparisonLarge");
-        List<Bogie> bogies = new ArrayList<>();
-        for (int i = 0; i < 50000; i++) bogies.add(new Bogie("B"+i, "G", 40+(i%100)));
-        PerformanceResult loopResult = benchmarkLoopFiltering(bogies, 60);
-        PerformanceResult streamResult = benchmarkStreamFiltering(bogies, 60);
-        assert loopResult.result.size() == streamResult.result.size();
-        System.out.println("✓ PASSED\n");
-    }
-
-    public void testEmptyDatasetHandling() {
-        System.out.println("TEST: testEmptyDatasetHandling");
-        List<Bogie> emptyList = new ArrayList<>();
-        List<Bogie> loopResult = filterBogiesByLoop(emptyList, 60);
-        List<Bogie> streamResult = filterBogiesByStream(emptyList, 60);
-        assert loopResult.size() == 0 && streamResult.size() == 0;
-        System.out.println("✓ PASSED\n");
+    public void testException_MultipleValidBogiesCreation() {
+        System.out.println("TEST: testException_MultipleValidBogiesCreation");
+        try {
+            Bogie bogie1 = new Bogie("Bogie-A", "Passenger", 50);
+            Bogie bogie2 = new Bogie("Bogie-B", "Goods", 150, "Coal");
+            Bogie bogie3 = new Bogie("Bogie-C", "Passenger", 75);
+            Bogie bogie4 = new Bogie("Bogie-D", "Goods", 200, "Petroleum");
+            Bogie bogie5 = new Bogie("Bogie-E", "Passenger", 100);
+            
+            System.out.println("  Created 5 bogies successfully:");
+            System.out.println("    " + bogie1);
+            System.out.println("    " + bogie2);
+            System.out.println("    " + bogie3);
+            System.out.println("    " + bogie4);
+            System.out.println("    " + bogie5);
+            
+            assert bogie1.getCapacity() == 50 : "Bogie1 capacity should be 50";
+            assert bogie2.getCapacity() == 150 : "Bogie2 capacity should be 150";
+            assert bogie3.getCapacity() == 75 : "Bogie3 capacity should be 75";
+            assert bogie4.getCapacity() == 200 : "Bogie4 capacity should be 200";
+            assert bogie5.getCapacity() == 100 : "Bogie5 capacity should be 100";
+            
+            System.out.println("✓ PASSED\n");
+            passedTests++;
+        } catch (InvalidCapacityException e) {
+            System.out.println("✗ FAILED: Unexpected exception: " + e.getMessage() + "\n");
+            failedTests++;
+        }
     }
 
     public static void main(String[] args) {
         System.out.println("========================================");
-        System.out.println("UC13: Performance Comparison Test Suite");
+        System.out.println("UC14: Custom Exception Handling Test Suite");
         System.out.println("========================================\n");
+        
         TrainConsistManagementAppTest tester = new TrainConsistManagementAppTest();
-        try {
-            tester.testLoopFilteringLogic();
-            tester.testStreamFilteringLogic();
-            tester.testLoopAndStreamResultsMatch();
-            tester.testExecutionTimeMeasurement();
-            tester.testLargeDatasetProcessing();
-            tester.testPerformanceComparisonSmall();
-            tester.testPerformanceComparisonLarge();
-            tester.testEmptyDatasetHandling();
-            System.out.println("========================================");
-            System.out.println("✓ ALL 8 TESTS PASSED!");
-            System.out.println("========================================");
-        } catch (AssertionError e) {
-            System.out.println("\n✗ TEST FAILED: " + e.getMessage());
-            e.printStackTrace();
+        
+        tester.testException_ValidCapacityCreation();
+        tester.testException_NegativeCapacityThrowsException();
+        tester.testException_ZeroCapacityThrowsException();
+        tester.testException_ExceptionMessageValidation();
+        tester.testException_ObjectIntegrityAfterCreation();
+        tester.testException_MultipleValidBogiesCreation();
+        
+        System.out.println("========================================");
+        System.out.println("Tests Passed: " + tester.passedTests);
+        System.out.println("Tests Failed: " + tester.failedTests);
+        System.out.println("========================================");
+        
+        if (tester.failedTests == 0) {
+            System.out.println("✓ ALL " + tester.passedTests + " TESTS PASSED!");
+        } else {
+            System.out.println("✗ SOME TESTS FAILED!");
         }
+        System.out.println("========================================");
     }
 }

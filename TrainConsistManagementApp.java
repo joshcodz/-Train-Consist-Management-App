@@ -3,17 +3,31 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+/**
+ * UC14: Custom Exception for Invalid Bogie Capacity
+ * Checked exception thrown when a bogie is created with invalid capacity
+ */
+class InvalidCapacityException extends Exception {
+    public InvalidCapacityException(String message) {
+        super(message);
+    }
+}
+
 class Bogie {
     private String name;
     private String type;
     private int capacity;
     private String cargo;      // New field for cargo type (UC12)
 
-    public Bogie(String name, String type, int capacity) {
+    public Bogie(String name, String type, int capacity) throws InvalidCapacityException {
         this(name, type, capacity, null);
     }
 
-    public Bogie(String name, String type, int capacity, String cargo) {
+    public Bogie(String name, String type, int capacity, String cargo) throws InvalidCapacityException {
+        // UC14: Validate capacity - fail fast for invalid values
+        if (capacity <= 0) {
+            throw new InvalidCapacityException("Capacity must be greater than zero");
+        }
         this.name = name;
         this.type = type;
         this.capacity = capacity;
@@ -153,17 +167,22 @@ public class TrainConsistManagementApp {
     }
 
     public static void main(String[] args) {
-        System.out.println("=== Train Consist Management App - UC13: Performance Comparison ===\n");
+        System.out.println("=== Train Consist Management App - UC14: Custom Exception Handling ===\n");
 
         // Create a List to store bogie objects
         List<Bogie> bogies = new ArrayList<>();
 
-        // Add passenger bogies with various capacities
-        bogies.add(new Bogie("Sleeper", "Passenger", 72));
-        bogies.add(new Bogie("AC Chair", "Passenger", 96));
-        bogies.add(new Bogie("First Class", "Passenger", 48));
-        bogies.add(new Bogie("General", "Passenger", 120));
-        bogies.add(new Bogie("AC Sleeper", "Passenger", 60));
+        // Add passenger bogies with various capacities (UC14: Must handle InvalidCapacityException)
+        try {
+            bogies.add(new Bogie("Sleeper", "Passenger", 72));
+            bogies.add(new Bogie("AC Chair", "Passenger", 96));
+            bogies.add(new Bogie("First Class", "Passenger", 48));
+            bogies.add(new Bogie("General", "Passenger", 120));
+            bogies.add(new Bogie("AC Sleeper", "Passenger", 60));
+        } catch (InvalidCapacityException e) {
+            System.out.println("Error creating bogies: " + e.getMessage());
+            System.exit(1);
+        }
 
         System.out.println("Original Bogie List:");
         System.out.println("-------------------");
@@ -172,104 +191,78 @@ public class TrainConsistManagementApp {
         }
 
         int capacityThreshold = 60;
-        System.out.println("\n=== UC13: Performance Comparison (Loops vs Streams) ===");
-        System.out.println("Task: Filter bogies with capacity > " + capacityThreshold + "\n");
+        System.out.println("\n=== UC14: Custom Exception Handling - Fail-Fast Validation ===");
+        System.out.println("Task: Demonstrate proper handling of invalid bogie capacity\n");
 
-        // Test Case 1: Small dataset comparison
-        System.out.println("Test Case 1: Small Dataset (5 bogies)");
+        // Test Case 1: Valid capacity (success case)
+        System.out.println("Test Case 1: Valid Capacity Creation");
         System.out.println("------------------------------------");
-        
-        PerformanceResult loopResult = benchmarkLoopFiltering(bogies, capacityThreshold);
-        System.out.println("Loop-Based Filtering:");
-        System.out.println("  Time (ns): " + loopResult.executionTimeNanos);
-        System.out.println("  Time (ms): " + String.format("%.6f", loopResult.getExecutionTimeMillis()));
-        System.out.println("  Results: " + loopResult.result.size() + " bogies filtered");
-        for (Bogie bogie : loopResult.result) {
-            System.out.println("    " + bogie);
+        try {
+            Bogie validBogie = new Bogie("TestBogie", "Passenger", 50);
+            System.out.println("✓ Created successfully: " + validBogie);
+        } catch (InvalidCapacityException e) {
+            System.out.println("✗ Exception (unexpected): " + e.getMessage());
         }
-        
-        PerformanceResult streamResult = benchmarkStreamFiltering(bogies, capacityThreshold);
-        System.out.println("\nStream-Based Filtering:");
-        System.out.println("  Time (ns): " + streamResult.executionTimeNanos);
-        System.out.println("  Time (ms): " + String.format("%.6f", streamResult.getExecutionTimeMillis()));
-        System.out.println("  Results: " + streamResult.result.size() + " bogies filtered");
-        for (Bogie bogie : streamResult.result) {
-            System.out.println("    " + bogie);
-        }
-        
-        long loopSmallTime = loopResult.executionTimeNanos;
-        long streamSmallTime = streamResult.executionTimeNanos;
-        System.out.println("\nSmall Dataset Comparison:");
-        System.out.println("  Loop time: " + loopSmallTime + " ns");
-        System.out.println("  Stream time: " + streamSmallTime + " ns");
-        System.out.println("  Difference: " + Math.abs(loopSmallTime - streamSmallTime) + " ns");
-        System.out.println("  Results match: " + (loopResult.result.size() == streamResult.result.size()));
 
-        // Test Case 2: Medium dataset comparison
-        System.out.println("\n\nTest Case 2: Medium Dataset (1,000 bogies)");
+        // Test Case 2: Invalid capacity - negative value (failure case)
+        System.out.println("\nTest Case 2: Negative Capacity Detection");
+        System.out.println("---------------------------------------");
+        try {
+            Bogie negativeBogie = new Bogie("InvalidBogie", "Passenger", -10);
+            System.out.println("✗ Should have thrown exception!");
+        } catch (InvalidCapacityException e) {
+            System.out.println("✓ Exception caught (expected): " + e.getMessage());
+        }
+
+        // Test Case 3: Invalid capacity - zero value (failure case)
+        System.out.println("\nTest Case 3: Zero Capacity Detection");
+        System.out.println("-----------------------------------");
+        try {
+            Bogie zeroBogie = new Bogie("InvalidBogie", "Passenger", 0);
+            System.out.println("✗ Should have thrown exception!");
+        } catch (InvalidCapacityException e) {
+            System.out.println("✓ Exception caught (expected): " + e.getMessage());
+        }
+
+        // Test Case 4: Multiple valid bogie creation
+        System.out.println("\nTest Case 4: Multiple Valid Bogies Creation");
         System.out.println("------------------------------------------");
-        List<Bogie> mediumDataset = new ArrayList<>();
-        for (int i = 0; i < 1000; i++) {
-            mediumDataset.add(new Bogie("Bogie-" + i, "Goods", 40 + (i % 100)));
+        try {
+            Bogie bogie1 = new Bogie("Bogie-A", "Goods", 100);
+            Bogie bogie2 = new Bogie("Bogie-B", "Goods", 200, "Petroleum");
+            Bogie bogie3 = new Bogie("Bogie-C", "Passenger", 75);
+            System.out.println("✓ All bogies created successfully:");
+            System.out.println("  " + bogie1);
+            System.out.println("  " + bogie2);
+            System.out.println("  " + bogie3);
+        } catch (InvalidCapacityException e) {
+            System.out.println("✗ Exception (unexpected): " + e.getMessage());
         }
-        
-        PerformanceResult loopMedium = benchmarkLoopFiltering(mediumDataset, capacityThreshold);
-        System.out.println("Loop-Based Filtering:");
-        System.out.println("  Time (ns): " + loopMedium.executionTimeNanos);
-        System.out.println("  Time (ms): " + String.format("%.6f", loopMedium.getExecutionTimeMillis()));
-        System.out.println("  Results: " + loopMedium.result.size() + " bogies filtered");
-        
-        PerformanceResult streamMedium = benchmarkStreamFiltering(mediumDataset, capacityThreshold);
-        System.out.println("\nStream-Based Filtering:");
-        System.out.println("  Time (ns): " + streamMedium.executionTimeNanos);
-        System.out.println("  Time (ms): " + String.format("%.6f", streamMedium.getExecutionTimeMillis()));
-        System.out.println("  Results: " + streamMedium.result.size() + " bogies filtered");
-        
-        long loopMediumTime = loopMedium.executionTimeNanos;
-        long streamMediumTime = streamMedium.executionTimeNanos;
-        System.out.println("\nMedium Dataset Comparison:");
-        System.out.println("  Loop time: " + loopMediumTime + " ns");
-        System.out.println("  Stream time: " + streamMediumTime + " ns");
-        System.out.println("  Difference: " + Math.abs(loopMediumTime - streamMediumTime) + " ns");
-        System.out.println("  Results match: " + (loopMedium.result.size() == streamMedium.result.size()));
 
-        // Test Case 3: Large dataset comparison
-        System.out.println("\n\nTest Case 3: Large Dataset (10,000 bogies)");
-        System.out.println("-----------------------------------------");
-        List<Bogie> largeDataset = new ArrayList<>();
-        for (int i = 0; i < 10000; i++) {
-            largeDataset.add(new Bogie("Bogie-" + i, "Goods", 40 + (i % 100)));
+        // Test Case 5: Object integrity after creation
+        System.out.println("\nTest Case 5: Object Integrity Validation");
+        System.out.println("---------------------------------------");
+        try {
+            Bogie bogie = new Bogie("TestBogie", "Passenger", 85);
+            System.out.println("Created bogie: " + bogie);
+            System.out.println("  Name: " + bogie.getName());
+            System.out.println("  Type: " + bogie.getType());
+            System.out.println("  Capacity: " + bogie.getCapacity());
+            System.out.println("✓ All properties verified correctly");
+        } catch (InvalidCapacityException e) {
+            System.out.println("✗ Exception (unexpected): " + e.getMessage());
         }
-        
-        PerformanceResult loopLarge = benchmarkLoopFiltering(largeDataset, capacityThreshold);
-        System.out.println("Loop-Based Filtering:");
-        System.out.println("  Time (ns): " + loopLarge.executionTimeNanos);
-        System.out.println("  Time (ms): " + String.format("%.6f", loopLarge.getExecutionTimeMillis()));
-        System.out.println("  Results: " + loopLarge.result.size() + " bogies filtered");
-        
-        PerformanceResult streamLarge = benchmarkStreamFiltering(largeDataset, capacityThreshold);
-        System.out.println("\nStream-Based Filtering:");
-        System.out.println("  Time (ns): " + streamLarge.executionTimeNanos);
-        System.out.println("  Time (ms): " + String.format("%.6f", streamLarge.getExecutionTimeMillis()));
-        System.out.println("  Results: " + streamLarge.result.size() + " bogies filtered");
-        
-        long loopLargeTime = loopLarge.executionTimeNanos;
-        long streamLargeTime = streamLarge.executionTimeNanos;
-        System.out.println("\nLarge Dataset Comparison:");
-        System.out.println("  Loop time: " + loopLargeTime + " ns");
-        System.out.println("  Stream time: " + streamLargeTime + " ns");
-        System.out.println("  Difference: " + Math.abs(loopLargeTime - streamLargeTime) + " ns");
-        System.out.println("  Results match: " + (loopLarge.result.size() == streamLarge.result.size()));
 
         // Display key concepts
-        System.out.println("\n\n=== Key Concepts Used in UC13 ===");
-        System.out.println("• System.nanoTime() – High-resolution time measurement");
-        System.out.println("• Performance Benchmarking – Evaluate operation execution time");
-        System.out.println("• Loop-Based Processing – Traditional imperative approach");
-        System.out.println("• Stream-Based Processing – Declarative functional approach");
-        System.out.println("• Micro-Measurement Awareness – Precise timing for small operations");
-        System.out.println("• Evidence-Driven Optimization – Decisions based on measurements");
+        System.out.println("\n\n=== Key Concepts Used in UC14 ===");
+        System.out.println("• Custom Exception – User-defined exception for domain-specific errors");
+        System.out.println("• Exception Inheritance – Extending Exception for checked exceptions");
+        System.out.println("• throw Keyword – Explicitly raising exceptions for business rule violations");
+        System.out.println("• throws Declaration – Declaring exceptions in method signatures");
+        System.out.println("• Fail-Fast Validation – Detecting errors early at object creation");
+        System.out.println("• Business Rule Enforcement – Encapsulating railway constraints");
+        System.out.println("• Defensive Programming – Preventing corrupted data from entering system");
 
-        System.out.println("\n=== Performance Comparison Complete ===");
+        System.out.println("\n=== UC14: Exception Handling Complete ===");
     }
 }
